@@ -8,13 +8,13 @@ import com.avasoft.androiddemo.BOs.UserBO.UserBO
 import com.avasoft.androiddemo.Services.UserService.IUserService
 
 @Database(entities = [UserBO::class], version = 1)
-abstract class RoomDatabase : RoomDatabase() {
+abstract class DemoDatabase : RoomDatabase() {
     abstract fun userDao() : IUserService
 
     companion object {
-        private var INSTANCE : RoomDatabase? = null
+        private var INSTANCE : DemoDatabase? = null
 
-        fun getInstance(context : Context) : RoomDatabase {
+        fun getInstance(context : Context) : DemoDatabase {
             synchronized(this) {
                 var instance = INSTANCE
 
@@ -22,7 +22,7 @@ abstract class RoomDatabase : RoomDatabase() {
                     instance = Room
                         .databaseBuilder(
                             context.applicationContext,
-                            RoomDatabase::class.java,
+                            DemoDatabase::class.java,
                             "room_database")
                         .fallbackToDestructiveMigration()
                         .build()

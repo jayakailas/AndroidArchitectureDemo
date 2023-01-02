@@ -1,12 +1,11 @@
 package com.avasoft.androiddemo.Pages.LoginScreen
 
+import android.widget.Toast
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -19,12 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,7 +35,7 @@ import com.avasoft.androiddemo.R
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun LoginView(vm: LoginViewModel = viewModel()){
+fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: (email: String) -> Unit){
     Box() {
         Column(
             modifier = Modifier
@@ -50,6 +51,8 @@ fun LoginView(vm: LoginViewModel = viewModel()){
             }
 
             val focusManager = LocalFocusManager.current
+
+            val context = LocalContext.current
 
             Text(
                 "Login",
@@ -153,6 +156,7 @@ fun LoginView(vm: LoginViewModel = viewModel()){
                         }
                     )
                 },
+                visualTransformation = if(!vm.passwordVisibility) PasswordVisualTransformation() else VisualTransformation.None,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
@@ -174,7 +178,12 @@ fun LoginView(vm: LoginViewModel = viewModel()){
                     vm.setIsEmailError(!EmailValidator.isValidEmail(vm.email))
                     vm.setIsPasswordError(vm.password.isBlank())
                     if(!vm.isEmailError && !vm.isPasswordError){
-                        vm.loginClicked()
+                        vm.loginClicked{ isSuccess, email ->
+                            if(isSuccess)
+                                login(email?:"")
+                            else
+                                Toast.makeText(context, "User Not Found", Toast.LENGTH_LONG).show()
+                        }
                     }
                 },
                 modifier = Modifier
@@ -186,6 +195,20 @@ fun LoginView(vm: LoginViewModel = viewModel()){
                     text = "Login",
                 )
             }
+
+            Text(
+                text = "Create Account?",
+                modifier = Modifier
+                    .padding(top = 10.dp)
+                    .clickable(
+                        interactionSource = remember{ MutableInteractionSource() },
+                        indication = null
+                    ){
+                        navigateToSignUp()
+                    },
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
+            )
         }
 
         Loader(isVisible = vm.isLoading)

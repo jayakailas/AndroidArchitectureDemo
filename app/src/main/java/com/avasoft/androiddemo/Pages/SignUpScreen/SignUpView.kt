@@ -1,12 +1,10 @@
 package com.avasoft.androiddemo.Pages.SignUpScreen
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +24,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,7 +33,7 @@ import com.avasoft.androiddemo.R
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SignUpView(vm: SignUpViewModel = viewModel()){
+fun SignUpView(vm: SignUpVM = viewModel()){
     Box() {
         Column(
             modifier = Modifier
@@ -193,7 +190,7 @@ fun SignUpView(vm: SignUpViewModel = viewModel()){
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Login",
+                    text = "Create Account",
                 )
             }
         }

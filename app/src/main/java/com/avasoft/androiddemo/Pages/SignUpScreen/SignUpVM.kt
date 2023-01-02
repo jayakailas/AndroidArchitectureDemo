@@ -1,15 +1,15 @@
-package com.avasoft.androiddemo.Pages.LoginScreen
+package com.avasoft.androiddemo.Pages.SignUpScreen
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
-class LoginViewModel: ViewModel() {
-
+class SignUpVM: ViewModel(){
     var email by mutableStateOf("")
     var password by mutableStateOf("")
     var isEmailError by mutableStateOf(false)
+    var isEmailExist by mutableStateOf(false)
     var isPasswordError by mutableStateOf(false)
     var passwordVisibility by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
@@ -34,7 +34,11 @@ class LoginViewModel: ViewModel() {
         passwordVisibility = !passwordVisibility
     }
 
-    fun loginClicked(){
-        // Login API
+    fun checkIfEmailAlreadyExist(){
+        // Check email API
+    }
+
+    fun createClicked(){
+
     }
 }
