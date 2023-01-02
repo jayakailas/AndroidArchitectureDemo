@@ -1,6 +1,7 @@
 package com.avasoft.androiddemo.Helpers.Navigation
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,7 +25,7 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
 
     NavHost(
         navController = navController,
-        startDestination = NavRoute.Map.route,
+        startDestination = NavRoute.Login.route,
         modifier = modifier
     ) {
         composable(route = NavRoute.Login.route) {
@@ -36,8 +37,7 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                     navController.navigate(NavRoute.SignUp.route)
                 },
                 login = { email ->
-                    navController.currentBackStackEntry?.savedStateHandle?.set("userEmail", email)
-                    navController.navigate(NavRoute.Location.route + "/$email")
+                    navController.navigate(NavRoute.Map.route)
                 }
             )
         }
@@ -46,21 +46,19 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
             SignUpView()
         }
 
-        composable(route = NavRoute.Location.route + "/{userEmail}") {
-            val userEmail = it.arguments?.getString("userEmail")?:""
+        composable(route = NavRoute.Location.route) {
 
         }
 
-        composable(route = NavRoute.LocationConverter.route + "/{userEmail}") {
-            val userEmail = it.arguments?.getString("userEmail")?:""
+        composable(route = NavRoute.LocationConverter.route) {
 
         }
 
-        composable(route = NavRoute.Map.route+"/{userEmail}") {
-            val userEmail = it.arguments?.getString("userEmail")?:""
+        composable(route = NavRoute.Map.route) {
             MapView(
                 vm = viewModel(
                     factory = MapVMFactory(
+                        app = LocalContext.current.applicationContext as Application,
                         repository = userRepository
                     )
                 )

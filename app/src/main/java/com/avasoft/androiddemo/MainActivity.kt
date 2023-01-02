@@ -35,13 +35,17 @@ class MainActivity : ComponentActivity() {
 
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-                    when (navBackStackEntry?.destination?.route) {
+                    bottomBarState = when (navBackStackEntry?.destination?.route) {
                         NavRoute.SignUp.route -> {
-                            bottomBarState = false
+                            false
                         }
 
                         NavRoute.Login.route -> {
-                            bottomBarState = false
+                            false
+                        }
+
+                        else -> {
+                            true
                         }
                     }
                     Scaffold(

@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.ServiceStatus
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
@@ -25,6 +26,7 @@ class LoginVM(app: Application): AndroidViewModel(app) {
     var isLoading by mutableStateOf(false)
 
     var userService: LocalUserService
+    val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
 
     init {
         val db = DemoDatabase.getInstance(app)
@@ -59,6 +61,7 @@ class LoginVM(app: Application): AndroidViewModel(app) {
                 val result = userService.validateUser(email, password)
                 if(result.status == ServiceStatus.Success){
                     isLoading = false
+                    sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
                     onSuccess(true, email)
                 }
                 else{
