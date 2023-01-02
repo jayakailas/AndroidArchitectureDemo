@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.BOs.UserBO.UserBO
+import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.ServiceStatus
@@ -27,6 +28,8 @@ class SignUpVM(app: Application): AndroidViewModel(app){
     var isLoading by mutableStateOf(false)
 
     var userService: LocalUserService
+
+    val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
 
     init {
         val db = DemoDatabase.getInstance(app)
@@ -55,19 +58,38 @@ class SignUpVM(app: Application): AndroidViewModel(app){
     }
 
     fun checkIfEmailAlreadyExist(){
-        // Check email API
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
+                isLoading = true
+                val result = userService.checkUserAlreadyExists(email)
+                if(result.status == ServiceStatus.Success){
+                    isLoading = false
+                    isEmailExist = result.content?:false
+                }
+                else{
+                    isLoading = false
+                    isEmailExist = result.content?:false
+                }
+            }
+        }
+        catch (ex: Exception){
+            isEmailExist = false
+            isLoading = false
+        }
     }
 
     fun createClicked(onSuccess: (Boolean) -> Unit) {
         try {
+            checkIfEmailAlreadyExist()
             isEmailError = !EmailValidator.isValidEmail(email)
             isPasswordError = password.isBlank()
             if(!isEmailError && !isEmailExist && !isPasswordError){
                 viewModelScope.launch(Dispatchers.IO) {
                     isLoading = true
                     val result = userService.createUser(UserBO(email, password, null, null, null, null))
-                    if(result.status == ServiceStatus.Success){
+                    if(result.status == ServiceStatus.Created){
                         isLoading = false
+                        sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
                         withContext(Dispatchers.Main) {
                             onSuccess(true)
                         }

@@ -35,10 +35,18 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                     factory = LoginVMFactory(LocalContext.current.applicationContext as Application)
                 ),
                 navigateToSignUp = {
-                    navController.navigate(NavRoute.SignUp.route)
+                    navController.navigate(NavRoute.SignUp.route){
+                        popUpTo(NavRoute.Login.route){
+                            inclusive = true
+                        }
+                    }
                 },
                 login = {
-                    navController.navigate(NavRoute.Location.route)
+                    navController.navigate(NavRoute.Location.route){
+                        popUpTo(NavRoute.Login.route){
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }
@@ -49,7 +57,11 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                     factory = SignUpVMFactory(LocalContext.current.applicationContext as Application)
                 )
             ){
-                navController.navigate(NavRoute.Location.route)
+                navController.navigate(NavRoute.Location.route){
+                    popUpTo(NavRoute.SignUp.route){
+                        inclusive = true
+                    }
+                }
             }
         }
 

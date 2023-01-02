@@ -29,11 +29,11 @@ class MapVM(app: Application, repository: LocalUserService): ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             if(userEmail.isNotBlank()) {
                 loadingState = true
-                val result = repository.checkUserAlreadyExists(email = userEmail)
-                currentLat = result.content?.currentLat?:""
-                currentLng = result.content?.currentLong?:""
-                customLat = result.content?.customLat?:""
-                customLng = result.content?.customLong?:""
+//                val result = repository.checkUserAlreadyExists(email = userEmail)
+//                currentLat = result.content?.currentLat?:""
+//                currentLng = result.content?.currentLong?:""
+//                customLat = result.content?.customLat?:""
+//                customLng = result.content?.customLong?:""
                 loadingState = false
             }
         }

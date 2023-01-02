@@ -1,6 +1,7 @@
 package com.avasoft.androiddemo.Pages.LoginScreen
 
 import android.app.Application
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,10 +59,10 @@ class LoginVM(app: Application): AndroidViewModel(app) {
 
     fun loginClicked(onSuccess: (Boolean) -> Unit) {
         try {
-            isEmailError = !EmailValidator.isValidEmail(email)
-            isPasswordError = password.isBlank()
-            if(!isEmailError && !isPasswordError){
-                viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.IO) {
+                isEmailError = !EmailValidator.isValidEmail(email)
+                isPasswordError = password.isBlank()
+                if(!isEmailError && !isPasswordError){
                     isLoading = true
                     val result = userService.validateUser(email, password)
                     if(result.status == ServiceStatus.Success){

@@ -18,6 +18,6 @@ interface IUserService {
     @Update
     fun updateUserData(data: UserBO)
 
-    @Query("SELECT * FROM user_table WHERE email = :email & password = :password")
+    @Query("SELECT * FROM user_table WHERE email = :email AND password = :password")
     fun validateUser(email: String, password: String): UserBO
 }
