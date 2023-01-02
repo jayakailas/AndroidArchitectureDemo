@@ -12,8 +12,14 @@ class LocalUserService(private val userDao: IUserService) {
         )
     }
 
-    suspend fun checkUserAlreadyExists(email: String): UserBO {
-        return userDao.getUserData(email = email)
+    suspend fun checkUserAlreadyExists(email: String): ServiceResult<UserBO> {
+        val data = userDao.getUserData(email = email)
+
+        return ServiceResult(
+            status = ServiceStatus.Success,
+            message = null,
+            content = data
+        )
     }
 
     suspend fun updateUserData(data: UserBO) {

@@ -19,6 +19,7 @@ import com.avasoft.androiddemo.Helpers.Navigation.NavRoute
 fun BottomNavBar(bottomBarState: Boolean, navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val userEmail = navBackStackEntry?.savedStateHandle?.get<String>("userEmail")
 
     AnimatedVisibility(
         visible = bottomBarState,
@@ -30,7 +31,7 @@ fun BottomNavBar(bottomBarState: Boolean, navController: NavController) {
                 BottomNavigationItem(
                     selected = item.route == currentRoute,
                     onClick = {
-                        navController.navigate(item.route) {
+                        navController.navigate(item.route+"/$userEmail") {
                             popUpTo(NavRoute.Location.route) {
                                 saveState = false
                             }

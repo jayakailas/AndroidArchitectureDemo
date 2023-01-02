@@ -12,12 +12,19 @@ import com.avasoft.androiddemo.Pages.LoginScreen.LoginVMFactory
 import com.avasoft.androiddemo.Pages.LoginScreen.LoginView
 import com.avasoft.androiddemo.Pages.MapScreen.MapView
 import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpView
+import com.avasoft.androiddemo.Pages.MapScreen.MapVMFactory
+import com.avasoft.androiddemo.Services.DemoDatabase
+import com.avasoft.androiddemo.Services.UserService.LocalUserService
 
 @Composable
 fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
+    val databaseInstance = DemoDatabase.getInstance(LocalContext.current.applicationContext)
+    val userDao = databaseInstance.userDao()
+    val userRepository = LocalUserService(userDao)
+
     NavHost(
         navController = navController,
-        startDestination = NavRoute.Login.route,
+        startDestination = NavRoute.Map.route,
         modifier = modifier
     ) {
         composable(route = NavRoute.Login.route) {
@@ -39,16 +46,25 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
             SignUpView()
         }
 
-        composable(route = NavRoute.Location.route) {
+        composable(route = NavRoute.Location.route + "/{userEmail}") {
+            val userEmail = it.arguments?.getString("userEmail")?:""
 
         }
 
-        composable(route = NavRoute.LocationConverter.route) {
+        composable(route = NavRoute.LocationConverter.route + "/{userEmail}") {
+            val userEmail = it.arguments?.getString("userEmail")?:""
 
         }
 
-        composable(route = NavRoute.Map.route) {
-            MapView()
+        composable(route = NavRoute.Map.route+"/{userEmail}") {
+            val userEmail = it.arguments?.getString("userEmail")?:""
+            MapView(
+                vm = viewModel(
+                    factory = MapVMFactory(
+                        repository = userRepository
+                    )
+                )
+            )
         }
     }
 }
