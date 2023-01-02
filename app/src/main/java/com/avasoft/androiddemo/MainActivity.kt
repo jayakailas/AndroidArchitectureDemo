@@ -4,12 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.avasoft.androiddemo.Helpers.BottomNavigation.BottomNavBar
+import com.avasoft.androiddemo.Helpers.Navigation.NavRoute
+import com.avasoft.androiddemo.Helpers.Navigation.NavigationComposable
 import com.avasoft.androiddemo.ui.theme.AndroidDemoTheme
 
 class MainActivity : ComponentActivity() {
@@ -22,14 +30,29 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting("Android")
+                    var bottomBarState by rememberSaveable { (mutableStateOf(true)) }
+                    val navController = rememberNavController()
+
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+
+                    when (navBackStackEntry?.destination?.route) {
+                        NavRoute.SignUp.route -> {
+                            bottomBarState = false
+                        }
+
+                        NavRoute.Login.route -> {
+                            bottomBarState = false
+                        }
+                    }
+                    Scaffold(
+                        bottomBar = {
+                            BottomNavBar(bottomBarState = bottomBarState, navController = navController)
+                        }
+                    ) {
+                        NavigationComposable(navController, Modifier.padding(it))
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
 }
