@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import com.avasoft.androiddemo.Pages.LoginScreen.LoginVMFactory
 import com.avasoft.androiddemo.Pages.LoginScreen.LoginView
 import com.avasoft.androiddemo.Pages.MapScreen.MapView
+import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpVMFactory
 import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpView
 import com.avasoft.androiddemo.Pages.MapScreen.MapVMFactory
 import com.avasoft.androiddemo.Services.DemoDatabase
@@ -36,14 +37,20 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                 navigateToSignUp = {
                     navController.navigate(NavRoute.SignUp.route)
                 },
-                login = { email ->
-                    navController.navigate(NavRoute.Map.route)
+                login = {
+                    navController.navigate(NavRoute.Location.route)
                 }
             )
         }
 
         composable(route = NavRoute.SignUp.route) {
-            SignUpView()
+            SignUpView(
+                vm = viewModel(
+                    factory = SignUpVMFactory(LocalContext.current.applicationContext as Application)
+                )
+            ){
+                navController.navigate(NavRoute.Location.route)
+            }
         }
 
         composable(route = NavRoute.Location.route) {

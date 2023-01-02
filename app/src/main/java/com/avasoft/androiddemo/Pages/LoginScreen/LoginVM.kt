@@ -10,11 +10,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
+import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.ServiceStatus
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class LoginVM(app: Application): AndroidViewModel(app) {
 
@@ -54,25 +56,31 @@ class LoginVM(app: Application): AndroidViewModel(app) {
         passwordVisibility = !passwordVisibility
     }
 
-    fun loginClicked(onSuccess: (Boolean, String?) -> Unit) {
+    fun loginClicked(onSuccess: (Boolean) -> Unit) {
         try {
-            viewModelScope.launch(Dispatchers.IO) {
-                isLoading = true
-                val result = userService.validateUser(email, password)
-                if(result.status == ServiceStatus.Success){
-                    isLoading = false
-                    sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
-                    onSuccess(true, email)
-                }
-                else{
-                    isLoading = false
-                    onSuccess(false, null)
+            isEmailError = !EmailValidator.isValidEmail(email)
+            isPasswordError = password.isBlank()
+            if(!isEmailError && !isPasswordError){
+                viewModelScope.launch(Dispatchers.IO) {
+                    isLoading = true
+                    val result = userService.validateUser(email, password)
+                    if(result.status == ServiceStatus.Success){
+                        isLoading = false
+                        sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
+                        withContext(Dispatchers.Main) {
+                            onSuccess(true)
+                        }
+                    }
+                    else{
+                        onSuccess(false)
+                        isLoading = false
+                    }
                 }
             }
         }
         catch (ex: Exception){
+            onSuccess(false)
             isLoading = false
-            onSuccess(false, null)
         }
     }
 }

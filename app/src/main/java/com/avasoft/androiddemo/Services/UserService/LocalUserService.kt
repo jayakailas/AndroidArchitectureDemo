@@ -6,10 +6,14 @@ import com.avasoft.androiddemo.Services.ServiceStatus
 
 class LocalUserService(private val userDao: IUserService) {
 
-    suspend fun createUser(data: UserBO): Long {
-        return userDao.createUser(
+    suspend fun createUser(data: UserBO): ServiceResult<UserBO> {
+        val response = userDao.createUser(
             data = data
         )
+        if(!response.equals(0)){
+            return ServiceResult(ServiceStatus.Created, null, null)
+        }
+        return ServiceResult(ServiceStatus.ServerError, null, null)
     }
 
     suspend fun checkUserAlreadyExists(email: String): ServiceResult<UserBO> {

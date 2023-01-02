@@ -35,7 +35,7 @@ import com.avasoft.androiddemo.R
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: (email: String) -> Unit){
+fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: () -> Unit){
     Box() {
         Column(
             modifier = Modifier
@@ -175,15 +175,9 @@ fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: (e
 
             Button(
                 onClick = {
-                    vm.setIsEmailError(!EmailValidator.isValidEmail(vm.email))
-                    vm.setIsPasswordError(vm.password.isBlank())
-                    if(!vm.isEmailError && !vm.isPasswordError){
-                        vm.loginClicked{ isSuccess, email ->
-                            if(isSuccess)
-                                login(email?:"")
-                            else
-                                Toast.makeText(context, "User Not Found", Toast.LENGTH_LONG).show()
-                        }
+                    vm.loginClicked{
+                        if(it)
+                            login()
                     }
                 },
                 modifier = Modifier

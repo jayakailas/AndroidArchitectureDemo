@@ -1,5 +1,6 @@
 package com.avasoft.androiddemo.Pages.SignUpScreen
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -33,7 +35,7 @@ import com.avasoft.androiddemo.R
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SignUpView(vm: SignUpVM = viewModel()){
+fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
     Box() {
         Column(
             modifier = Modifier
@@ -176,12 +178,12 @@ fun SignUpView(vm: SignUpVM = viewModel()){
                     color = Color.Red
                 )
 
+            val context = LocalContext.current
             Button(
                 onClick = {
-                    vm.setIsEmailError(!EmailValidator.isValidEmail(vm.email))
-                    vm.setIsPasswordError(vm.password.isBlank())
-                    if(!vm.isEmailError && !vm.isEmailExist && !vm.isPasswordError){
-                        vm.createClicked()
+                    vm.createClicked{ isSuccess ->
+                        if(isSuccess)
+                            login()
                     }
                 },
                 modifier = Modifier
