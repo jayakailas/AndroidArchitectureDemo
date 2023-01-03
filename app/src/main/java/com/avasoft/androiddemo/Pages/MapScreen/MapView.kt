@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +21,11 @@ import com.google.maps.android.compose.MarkerState
 
 @Composable
 fun MapView(vm: MapVM) {
+
+    LaunchedEffect(key1 = Unit){
+        vm.pageLoad()
+    }
+
     if(vm.currentLat.isNotBlank() &&
         vm.currentLng.isNotBlank() &&
         vm.customLat.isNotBlank() &&

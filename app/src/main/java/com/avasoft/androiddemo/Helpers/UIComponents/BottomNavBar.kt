@@ -9,16 +9,20 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Helpers.RouteConfig.BottomNavItems
+import com.avasoft.androiddemo.Helpers.RouteConfig.NavRoute
 
 @Composable
 fun BottomNavBar(bottomBarState: Boolean, navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val currentTab by GlobalConstants.currentTab.observeAsState(initial = NavRoute.Location.route)
     val userEmail = navBackStackEntry?.savedStateHandle?.get<String>("userEmail")
 
     AnimatedVisibility(
@@ -29,14 +33,17 @@ fun BottomNavBar(bottomBarState: Boolean, navController: NavController) {
         BottomNavigation() {
             BottomNavItems.forEach { item ->
                 BottomNavigationItem(
-                    selected = item.route == currentRoute,
+                    selected = item.route == currentTab,
                     onClick = {
+                        val popUptoRoute  = currentTab
+                        GlobalConstants.currentTab.postValue(item.route)
                         navController.navigate(item.route) {
-                            popUpTo(item.route) {
-                                saveState = false
+                            popUpTo(popUptoRoute) {
+                                this.inclusive = true
+                                saveState = true
                             }
                             launchSingleTop = true
-                            restoreState = false
+                            restoreState = true
                         }
                     },
                     icon = {

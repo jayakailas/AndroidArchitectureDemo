@@ -24,17 +24,15 @@ class LocationConversionVM(app: Application, private val userService: LocalUserS
 
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
 
-    init {
+    fun pageLoad(){
         val userEmail = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 if(userEmail.isNotBlank()) {
                     val result = userService.getUserByEmail(email = userEmail)
                     if(result.status == ServiceStatus.Success){
-                        withContext(Dispatchers.Main) {
-                            distanceInKm = result.content?.distance?:""
-                            distanceToShow = result.content?.distance?:""
-                        }
+                        distanceInKm = result.content?.distance?:""
+                        distanceToShow = result.content?.distance?:""
                     }
                     else{
                         failurePopUp = true

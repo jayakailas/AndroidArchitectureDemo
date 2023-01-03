@@ -29,6 +29,10 @@ import com.avasoft.androiddemo.R
 @Composable
 fun LocationConversionView(vm: LocationConversionVM = viewModel()){
 
+    LaunchedEffect(key1 = Unit){
+        vm.pageLoad()
+    }
+
     if(vm.distanceToShow.isNotBlank()){
         Box() {
             Column(
@@ -49,7 +53,7 @@ fun LocationConversionView(vm: LocationConversionVM = viewModel()){
                 )
 
 
-                var selectedItem by rememberSaveable{ mutableStateOf(unitsList[0].name) }
+                var selectedItem by remember { mutableStateOf(unitsList[0].name) }
                 var isExpanded by remember { mutableStateOf(false) }
 
                 Box(modifier = Modifier) {
