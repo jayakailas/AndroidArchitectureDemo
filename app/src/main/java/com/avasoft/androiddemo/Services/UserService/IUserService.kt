@@ -16,7 +16,7 @@ interface IUserService {
     suspend fun createUser(data: UserBO): Long
 
     @Update
-    fun updateUserData(data: UserBO)
+    fun updateUserData(data: UserBO): Int
 
     @Query("SELECT * FROM user_table WHERE email = :email AND password = :password")
     fun validateUser(email: String, password: String): UserBO

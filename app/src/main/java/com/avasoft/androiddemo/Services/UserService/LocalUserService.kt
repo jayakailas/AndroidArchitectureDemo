@@ -25,8 +25,13 @@ class LocalUserService(private val userDao: IUserService) {
         return ServiceResult(ServiceStatus.NotFound, null, false)
     }
 
-    suspend fun updateUserData(data: UserBO) {
-        userDao.updateUserData(data = data)
+    suspend fun updateUserData(data: UserBO): ServiceResult<Int> {
+        val data = userDao.updateUserData(data = data)
+
+        if(data != 0){
+            return ServiceResult(ServiceStatus.Success, null, data)
+        }
+        return ServiceResult(ServiceStatus.ServerError, null, null)
     }
 
     suspend fun validateUser(email: String, password: String): ServiceResult<Boolean>{

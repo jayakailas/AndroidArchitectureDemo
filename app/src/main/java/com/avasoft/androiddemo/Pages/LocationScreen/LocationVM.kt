@@ -3,7 +3,6 @@ package com.avasoft.androiddemo.Pages.LocationScreen
 import android.Manifest
 import android.app.Activity
 import android.app.Application
-import android.location.Location
 import android.util.Log
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
@@ -12,14 +11,14 @@ import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.avasoft.androiddemo.BOs.UserBO.UserBO
+import com.avasoft.androiddemo.BOs.UserBO.calculateDistance
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
-import com.avasoft.androiddemo.Services.LocationService.LocationManager
+import com.avasoft.androiddemo.Services.LocationService.ILocationService
+import com.avasoft.androiddemo.Services.LocationService.ISystemLocationService
+import com.avasoft.androiddemo.Services.LocationService.SystemLocationService
+import com.avasoft.androiddemo.Services.LocationService.LocationService
 import com.avasoft.androiddemo.Services.ServiceStatus
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -28,8 +27,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.*
 
-class LocationVM(app : Application, userService: LocalUserService, private val locationManager: LocationManager = LocationManager(app.applicationContext)): AndroidViewModel(app){
+
+class LocationVM(app : Application,private val userService: LocalUserService, private val locationService: ILocationService = LocationService(), private val systemLocationService: ISystemLocationService = SystemLocationService(app.applicationContext)): AndroidViewModel(app){
 
     @OptIn(ExperimentalPermissionsApi::class)
     var locationPermissionState: MultiplePermissionsState? = null
@@ -44,8 +45,11 @@ class LocationVM(app : Application, userService: LocalUserService, private val l
 
     var currentLat by mutableStateOf("")
     var currentLong by mutableStateOf("")
+    var currentAddress by mutableStateOf("")
+
     var customLat by mutableStateOf("")
     var customLong by mutableStateOf("")
+    var distance by mutableStateOf("")
 
     var isLoading = MutableLiveData<Boolean>(false)
 
@@ -65,6 +69,7 @@ class LocationVM(app : Application, userService: LocalUserService, private val l
                         else{
                             currentLat = user.currentLat.toString()
                             currentLong = user.currentLong.toString()
+                            getAddress(currentLat, currentLong)
                         }
                     }
                 }
@@ -72,7 +77,62 @@ class LocationVM(app : Application, userService: LocalUserService, private val l
             }
         }
         catch (ex: Exception){
+            isLoading.postValue(false)
+        }
+    }
 
+    fun setUserCustomLat(lat: String){
+        customLat = when (lat.toDoubleOrNull()) {
+            null -> customLat //old value
+            else -> lat   //new value
+        }
+        user.customLat = when (lat.toDoubleOrNull()) {
+            null -> user.customLat //old value
+            else -> lat   //new value
+        }
+    }
+
+    fun setUserCustomLong(long: String){
+        customLong = when (long.toDoubleOrNull()) {
+            null -> customLong //old value
+            else -> long   //new value
+        }
+        user.customLong = when (long.toDoubleOrNull()) {
+            null -> user.customLong //old value
+            else -> long   //new value
+        }
+    }
+
+    fun calculateDistanceClicked(){
+        try{
+            viewModelScope.launch(Dispatchers.IO) {
+                if(customLat.isNotBlank() && customLong.isNotBlank()){
+                    isLoading.postValue(true)
+                    user.calculateDistance()
+                    distance = user.distance.toString()
+
+                    val result = userService.updateUserData(user)
+                    if(result.status == ServiceStatus.Success){
+                        isLoading.postValue(false)
+                    }
+                    else{
+                        isLoading.postValue(false)
+                    }
+                }
+            }
+        }
+        catch (ex:Exception){
+            isLoading.postValue(false)
+        }
+    }
+
+    private fun getAddress(lat: String, long: String){
+        viewModelScope.launch {
+            val result = locationService.getAddress(lat, long,getApplication<Application>().applicationContext)
+            Log.d("API", result.toString())
+            if(result.status == ServiceStatus.Success){
+                currentAddress = result.content?.getAddressLine(0).toString()
+            }
         }
     }
 
@@ -101,29 +161,37 @@ class LocationVM(app : Application, userService: LocalUserService, private val l
 
     @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION","android.permission.ACCESS_FINE_LOCATION"])
     fun checkGPS(){
-        viewModelScope.launch {
-
-            locationManager.checkGPS{ isSuccess, gpsIntent ->
-                if(isSuccess){
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = systemLocationService.checkGPS()
+            if(result.status == ServiceStatus.Success){
                     getCurrentLocation()
                 }
-                else if(!isSuccess && gpsIntent != null){
+                else if(result.status == ServiceStatus.ServerError && result.content != null){
                     scope.launch {
-                        gpsLaunchRequest?.launch(IntentSenderRequest.Builder(gpsIntent).build())
+                        gpsLaunchRequest?.launch(IntentSenderRequest.Builder(result.content).build())
                     }
                 }
                 else {
 //                    isFailurePopUp = true
                 }
-            }
         }
     }
     @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION","android.permission.ACCESS_FINE_LOCATION"])
     fun getCurrentLocation(){
-        locationManager.currentLocation { location ->
-            if(location != null){
-                currentLat = location.latitude.toString()
-                currentLong = location.longitude.toString()
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = systemLocationService.currentLocation()
+            if(result.status == ServiceStatus.Success){
+                val location = result.content
+                if(location != null){
+                    currentLat = location.latitude.toString()
+                    currentLong = location.longitude.toString()
+                    user.currentLat = location.latitude.toString()
+                    user.currentLong = location.longitude.toString()
+                    getAddress(currentLat, currentLong)
+                }
+                else {
+//                isFailurePopUp = true
+                }
             }
             else {
 //                isFailurePopUp = true
@@ -133,10 +201,20 @@ class LocationVM(app : Application, userService: LocalUserService, private val l
 
     @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION","android.permission.ACCESS_FINE_LOCATION"])
     fun getLastKnownLocation(){
-        locationManager.getLastKnownLocation { location ->
-            if(location != null){
-                currentLat = location.latitude.toString()
-                currentLong = location.longitude.toString()
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = systemLocationService.getLastKnownLocation()
+            if(result.status == ServiceStatus.Success){
+                val location = result.content
+                if(location != null){
+                    currentLat = location.latitude.toString()
+                    currentLong = location.longitude.toString()
+                    user.currentLat = location.latitude.toString()
+                    user.currentLong = location.longitude.toString()
+                    getAddress(currentLat, currentLong)
+                }
+                else {
+//                isFailurePopUp = true
+                }
             }
             else {
 //                isFailurePopUp = true

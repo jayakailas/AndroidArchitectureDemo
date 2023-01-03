@@ -11,6 +11,8 @@ import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +39,8 @@ fun LocationView(vm: LocationVM = viewModel()){
         permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
         onPermissionsResult = vm::locationPermissionCallback
     )
+
+    val loaderState by vm.isLoading.observeAsState(initial = false)
 
     Box(){
         Column(
@@ -67,6 +71,22 @@ fun LocationView(vm: LocationVM = viewModel()){
                 )
             }
 
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(5.dp)
+            ) {
+                Text(
+                    "Address: ",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp
+                )
+
+                Text(
+                    vm.currentAddress,
+                )
+            }
+
             OutlinedTextField(
                 value = vm.customLat,
                 onValueChange = {
@@ -74,10 +94,7 @@ fun LocationView(vm: LocationVM = viewModel()){
                     if (it.isEmpty()){
                         vm.customLat = it
                     } else {
-                        vm.customLat = when (it.toDoubleOrNull()) {
-                            null -> vm.customLat //old value
-                            else -> it   //new value
-                        }
+                        vm.setUserCustomLat(it)
                     }
                 },
                 modifier = Modifier
@@ -97,10 +114,7 @@ fun LocationView(vm: LocationVM = viewModel()){
                     if (it.isEmpty()){
                         vm.customLong = it
                     } else {
-                        vm.customLong = when (it.toDoubleOrNull()) {
-                            null -> vm.customLong //old value
-                            else -> it   //new value
-                        }
+                        vm.setUserCustomLong(it)
                     }
                 },
                 modifier = Modifier
@@ -116,7 +130,7 @@ fun LocationView(vm: LocationVM = viewModel()){
 
             Button(
                 onClick = {
-
+                    vm.calculateDistanceClicked()
                 }
             ) {
                 Text(
@@ -125,10 +139,10 @@ fun LocationView(vm: LocationVM = viewModel()){
             }
 
             Text(
-                "Distance:"
+                "Distance: ${vm.distance} kms"
             )
         }
         
-        Loader(isVisible = vm.isLoading.value!!)
+        Loader(isVisible = loaderState)
     }
 }
