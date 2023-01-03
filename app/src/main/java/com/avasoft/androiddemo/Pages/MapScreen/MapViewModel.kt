@@ -28,7 +28,7 @@ class MapVM(app: Application, repository: LocalUserService): ViewModel() {
         Log.d("userEmail", userEmail)
         viewModelScope.launch(Dispatchers.IO) {
             if(userEmail.isNotBlank()) {
-                loadingState = true
+//                loadingState = true
 //                val result = repository.checkUserAlreadyExists(email = userEmail)
 //                currentLat = result.content?.currentLat?:""
 //                currentLng = result.content?.currentLong?:""

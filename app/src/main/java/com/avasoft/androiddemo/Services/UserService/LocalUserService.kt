@@ -36,4 +36,12 @@ class LocalUserService(private val userDao: IUserService) {
         }
         return ServiceResult(ServiceStatus.NotFound, "User Not Found", null)
     }
+
+    suspend fun getUserByEmail(email: String): ServiceResult<UserBO>{
+        val data = userDao.getUserData(email = email)
+        if(data != null){
+            return ServiceResult(ServiceStatus.Success, null, data)
+        }
+        return ServiceResult(ServiceStatus.NotFound, null, null)
+    }
 }

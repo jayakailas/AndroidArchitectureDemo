@@ -31,8 +31,8 @@ fun BottomNavBar(bottomBarState: Boolean, navController: NavController) {
                 BottomNavigationItem(
                     selected = item.route == currentRoute,
                     onClick = {
-                        navController.navigate(item.route+"/$userEmail") {
-                            popUpTo(NavRoute.Location.route) {
+                        navController.navigate(item.route) {
+                            popUpTo(item.route) {
                                 saveState = false
                             }
                             launchSingleTop = true

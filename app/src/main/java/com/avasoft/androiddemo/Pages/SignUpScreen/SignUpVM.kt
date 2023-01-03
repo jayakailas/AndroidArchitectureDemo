@@ -86,7 +86,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             if(!isEmailError && !isEmailExist && !isPasswordError){
                 viewModelScope.launch(Dispatchers.IO) {
                     isLoading = true
-                    val result = userService.createUser(UserBO(email, password, null, null, null, null))
+                    val result = userService.createUser(UserBO(email, password, null, null, null, null, null))
                     if(result.status == ServiceStatus.Created){
                         isLoading = false
                         sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()

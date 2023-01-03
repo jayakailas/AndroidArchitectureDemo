@@ -9,6 +9,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.avasoft.androiddemo.Pages.LocationScreen.LocationVMFactory
+import com.avasoft.androiddemo.Pages.LocationScreen.LocationView
 import com.avasoft.androiddemo.Pages.LoginScreen.LoginVMFactory
 import com.avasoft.androiddemo.Pages.LoginScreen.LoginView
 import com.avasoft.androiddemo.Pages.MapScreen.MapView
@@ -66,7 +68,13 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
         }
 
         composable(route = NavRoute.Location.route) {
-
+            LocationView(
+                vm = viewModel(
+                    factory = LocationVMFactory(LocalContext.current.applicationContext as Application,
+                        userService = userRepository
+                    )
+                )
+            )
         }
 
         composable(route = NavRoute.LocationConverter.route) {
