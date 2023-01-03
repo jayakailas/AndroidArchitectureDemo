@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.avasoft.androiddemo.Helpers.UIComponents.Loader
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
@@ -18,28 +19,32 @@ fun MapView(vm: MapVM) {
             modifier = Modifier.fillMaxSize()
         ) {
             GoogleMap {
-//                Marker(
-//                    state = MarkerState(
-//                        LatLng(
-//                            vm.currentLat.toDouble(),
-//                            vm.currentLng.toDouble()
-//                        )
-//                    )
-//                )
-//
-//                Marker(
-//                    state = MarkerState(
-//                        LatLng(
-//                            vm.customLat.toDouble(),
-//                            vm.customLng.toDouble()
-//                        )
-//                    )
-//                )
+                if(vm.currentLat.isNotBlank() &&
+                    vm.currentLng.isNotBlank() &&
+                    vm.customLat.isNotBlank() &&
+                    vm.customLng.isNotBlank()
+                ) {
+                    Marker(
+                        state = MarkerState(
+                            LatLng(
+                                vm.currentLat.toDouble(),
+                                vm.currentLng.toDouble()
+                            )
+                        )
+                    )
+
+                    Marker(
+                        state = MarkerState(
+                            LatLng(
+                                vm.customLat.toDouble(),
+                                vm.customLng.toDouble()
+                            )
+                        )
+                    )
+                }
             }
         }
 
-        if(vm.loadingState) {
-
-        }
+        Loader(vm.loadingState)
     }
 }

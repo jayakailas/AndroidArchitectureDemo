@@ -12,6 +12,7 @@ import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MapVM(app: Application, repository: LocalUserService): ViewModel() {
 
@@ -25,16 +26,17 @@ class MapVM(app: Application, repository: LocalUserService): ViewModel() {
 
     init {
         val userEmail = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
-        Log.d("userEmail", userEmail)
+
         viewModelScope.launch(Dispatchers.IO) {
             if(userEmail.isNotBlank()) {
-//                loadingState = true
-//                val result = repository.checkUserAlreadyExists(email = userEmail)
-//                currentLat = result.content?.currentLat?:""
-//                currentLng = result.content?.currentLong?:""
-//                customLat = result.content?.customLat?:""
-//                customLng = result.content?.customLong?:""
-                loadingState = false
+                val result = repository.getUserByEmail(email = userEmail)
+
+                withContext(Dispatchers.Main) {
+                    currentLat = result.content?.currentLat?:""
+                    currentLng = result.content?.currentLong?:""
+                    customLat = result.content?.customLat?:""
+                    customLng = result.content?.customLong?:""
+                }
             }
         }
     }
