@@ -53,12 +53,14 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
 
     var isLoading = MutableLiveData<Boolean>(false)
 
+    var failurePopUp by mutableStateOf(false)
+
     init {
-        try {
-            val userEmail = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
-            viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val userEmail = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
                 isLoading.postValue(true)
-                delay(5000)
+                delay(2000)
                 if(userEmail.isNotBlank()) {
                     val result = userService.getUserByEmail(userEmail)
                     if(result.status == ServiceStatus.Success){
@@ -69,15 +71,18 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
                         else{
                             currentLat = user.currentLat.toString()
                             currentLong = user.currentLong.toString()
+                            customLat = user.customLat.toString()
+                            customLong = user.customLong.toString()
+                            distance = user.distance.toString()
                             getAddress(currentLat, currentLong)
                         }
                     }
                 }
                 isLoading.postValue(false)
             }
-        }
-        catch (ex: Exception){
-            isLoading.postValue(false)
+            catch (ex: Exception){
+                isLoading.postValue(false)
+            }
         }
     }
 
@@ -104,34 +109,35 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
     }
 
     fun calculateDistanceClicked(){
-        try{
-            viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try{
                 if(customLat.isNotBlank() && customLong.isNotBlank()){
                     isLoading.postValue(true)
                     user.calculateDistance()
                     distance = user.distance.toString()
-
-                    val result = userService.updateUserData(user)
-                    if(result.status == ServiceStatus.Success){
-                        isLoading.postValue(false)
-                    }
-                    else{
-                        isLoading.postValue(false)
-                    }
+                    userService.updateUserData(user)
+                    isLoading.postValue(false)
                 }
             }
-        }
-        catch (ex:Exception){
-            isLoading.postValue(false)
+            catch (ex:Exception){
+                isLoading.postValue(false)
+            }
         }
     }
 
     private fun getAddress(lat: String, long: String){
         viewModelScope.launch {
-            val result = locationService.getAddress(lat, long,getApplication<Application>().applicationContext)
-            Log.d("API", result.toString())
-            if(result.status == ServiceStatus.Success){
-                currentAddress = result.content?.getAddressLine(0).toString()
+            try{
+                isLoading.postValue(true)
+                val result = locationService.getAddress(lat, long,getApplication<Application>().applicationContext)
+                Log.d("API", result.toString())
+                if(result.status == ServiceStatus.Success){
+                    currentAddress = result.content?.getAddressLine(0).toString()
+                }
+                isLoading.postValue(false)
+            }
+            catch (ex:Exception){
+                isLoading.postValue(false)
             }
         }
     }
@@ -146,7 +152,7 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
                 getLastKnownLocation()
             }
             else -> {
-//                isFailurePopUp = true
+                failurePopUp = true
             }
         }
     }
@@ -156,7 +162,7 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
         if(it.resultCode == Activity.RESULT_OK){
             getCurrentLocation()
         }
-//        else isFailurePopUp = true
+        else failurePopUp = true
     }
 
     @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION","android.permission.ACCESS_FINE_LOCATION"])
@@ -164,16 +170,16 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
         viewModelScope.launch(Dispatchers.IO) {
             val result = systemLocationService.checkGPS()
             if(result.status == ServiceStatus.Success){
-                    getCurrentLocation()
+                getCurrentLocation()
+            }
+            else if(result.status == ServiceStatus.ServerError && result.content != null){
+                scope.launch {
+                    gpsLaunchRequest?.launch(IntentSenderRequest.Builder(result.content).build())
                 }
-                else if(result.status == ServiceStatus.ServerError && result.content != null){
-                    scope.launch {
-                        gpsLaunchRequest?.launch(IntentSenderRequest.Builder(result.content).build())
-                    }
-                }
-                else {
-//                    isFailurePopUp = true
-                }
+            }
+            else {
+            failurePopUp = true
+            }
         }
     }
     @RequiresPermission(anyOf = ["android.permission.ACCESS_COARSE_LOCATION","android.permission.ACCESS_FINE_LOCATION"])
@@ -190,11 +196,11 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
                     getAddress(currentLat, currentLong)
                 }
                 else {
-//                isFailurePopUp = true
+                    failurePopUp = true
                 }
             }
             else {
-//                isFailurePopUp = true
+                failurePopUp = true
             }
         }
     }
@@ -213,11 +219,11 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
                     getAddress(currentLat, currentLong)
                 }
                 else {
-//                isFailurePopUp = true
+                    failurePopUp = true
                 }
             }
             else {
-//                isFailurePopUp = true
+                failurePopUp = true
             }
         }
     }
@@ -227,6 +233,10 @@ class LocationVM(app : Application,private val userService: LocalUserService, pr
         scope.launch {
             locationPermissionState?.launchMultiplePermissionRequest()
         }
+    }
+
+    fun closePopUp(){
+        failurePopUp = false
     }
 }
 

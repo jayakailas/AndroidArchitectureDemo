@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.avasoft.androiddemo.Helpers.UIComponents.FailurePopUp
 import com.avasoft.androiddemo.Helpers.UIComponents.Loader
 import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.R
@@ -126,8 +128,7 @@ fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: ()
                                 if (isLoadDone)
                                     vm.setIsPasswordError(vm.password.isBlank())
                             }
-                        }
-                        catch (ex: Exception){
+                        } catch (ex: Exception) {
                             // handle exception
                         }
                     },
@@ -195,9 +196,9 @@ fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: ()
                 modifier = Modifier
                     .padding(top = 10.dp)
                     .clickable(
-                        interactionSource = remember{ MutableInteractionSource() },
+                        interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ){
+                    ) {
                         navigateToSignUp()
                     },
                 fontWeight = FontWeight.SemiBold,
@@ -206,5 +207,11 @@ fun LoginView(vm: LoginVM = viewModel(), navigateToSignUp: () -> Unit, login: ()
         }
 
         Loader(isVisible = vm.isLoading)
+
+        if(vm.failurePopUp){
+            FailurePopUp(label = stringResource(id = R.string.login_failed)) {
+                vm.closePopUp()
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
-package com.avasoft.androiddemo.Helpers.BottomNavigation
+package com.avasoft.androiddemo.Helpers.RouteConfig
 
-import com.avasoft.androiddemo.Helpers.Navigation.NavRoute
+import com.avasoft.androiddemo.Helpers.RouteConfig.NavRoute
 import com.avasoft.androiddemo.R
 
 data class BottomNavBarItem(

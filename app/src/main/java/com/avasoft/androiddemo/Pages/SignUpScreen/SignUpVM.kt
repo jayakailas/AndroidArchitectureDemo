@@ -29,6 +29,8 @@ class SignUpVM(app: Application): AndroidViewModel(app){
 
     var userService: LocalUserService
 
+    var failurePopUp by mutableStateOf(false)
+
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
 
     init {
@@ -97,6 +99,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                     else{
                         onSuccess(false)
                         isLoading = false
+                        failurePopUp = true
                     }
                 }
             }
@@ -104,7 +107,12 @@ class SignUpVM(app: Application): AndroidViewModel(app){
         catch (ex: Exception){
             onSuccess(false)
             isLoading = false
+            failurePopUp = true
         }
+    }
+
+    fun closePopUp(){
+        failurePopUp = false
     }
 }
 

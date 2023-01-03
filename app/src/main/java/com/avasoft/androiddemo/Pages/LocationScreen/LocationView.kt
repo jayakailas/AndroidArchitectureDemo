@@ -16,11 +16,14 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.avasoft.androiddemo.Helpers.UIComponents.FailurePopUp
 import com.avasoft.androiddemo.Helpers.UIComponents.Loader
+import com.avasoft.androiddemo.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
@@ -144,5 +147,11 @@ fun LocationView(vm: LocationVM = viewModel()){
         }
         
         Loader(isVisible = loaderState)
+
+        if(vm.failurePopUp){
+            FailurePopUp(label = stringResource(id = R.string.err_occurred)) {
+                vm.closePopUp()
+            }
+        }
     }
 }

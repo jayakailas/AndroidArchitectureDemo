@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.avasoft.androiddemo.Helpers.UIComponents.FailurePopUp
 import com.avasoft.androiddemo.Helpers.UIComponents.Loader
 import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.R
@@ -198,5 +200,11 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
         }
 
         Loader(isVisible = vm.isLoading)
+
+        if(vm.failurePopUp){
+            FailurePopUp(label = stringResource(id = R.string.create_acc_failed)) {
+                vm.closePopUp()
+            }
+        }
     }
 }

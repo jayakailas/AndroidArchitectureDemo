@@ -40,8 +40,6 @@ class MapVM(app: Application, repository: LocalUserService): ViewModel() {
             }
         }
     }
-
-
 }
 
 class MapVMFactory(val app: Application, val repository: LocalUserService): ViewModelProvider.NewInstanceFactory(){

@@ -28,6 +28,8 @@ class LoginVM(app: Application): AndroidViewModel(app) {
     var passwordVisibility by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
 
+    var failurePopUp by mutableStateOf(false)
+
     var userService: LocalUserService
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
 
@@ -75,6 +77,7 @@ class LoginVM(app: Application): AndroidViewModel(app) {
                     else{
                         onSuccess(false)
                         isLoading = false
+                        failurePopUp = true
                     }
                 }
             }
@@ -82,7 +85,12 @@ class LoginVM(app: Application): AndroidViewModel(app) {
         catch (ex: Exception){
             onSuccess(false)
             isLoading = false
+            failurePopUp = true
         }
+    }
+
+    fun closePopUp(){
+        failurePopUp = false
     }
 }
 

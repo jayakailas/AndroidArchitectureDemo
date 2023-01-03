@@ -1,7 +1,6 @@
 package com.avasoft.androiddemo.Helpers.Navigation
 
 import android.app.Application
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -9,6 +8,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.avasoft.androiddemo.Helpers.RouteConfig.NavRoute
+import com.avasoft.androiddemo.Pages.LocationConversionScreen.LocationConversionVMFactory
+import com.avasoft.androiddemo.Pages.LocationConversionScreen.LocationConversionView
 import com.avasoft.androiddemo.Pages.LocationScreen.LocationVMFactory
 import com.avasoft.androiddemo.Pages.LocationScreen.LocationView
 import com.avasoft.androiddemo.Pages.LoginScreen.LoginVMFactory
@@ -78,7 +80,14 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
         }
 
         composable(route = NavRoute.LocationConverter.route) {
-
+            LocationConversionView(
+                vm = viewModel(
+                    factory = LocationConversionVMFactory(
+                        app = LocalContext.current.applicationContext as Application,
+                        userService = userRepository
+                    )
+                )
+            )
         }
 
         composable(route = NavRoute.Map.route) {

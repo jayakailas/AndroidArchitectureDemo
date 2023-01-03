@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.avasoft.androiddemo.Helpers.BottomNavigation.BottomNavBar
-import com.avasoft.androiddemo.Helpers.Navigation.NavRoute
+import com.avasoft.androiddemo.Helpers.RouteConfig.NavRoute
 import com.avasoft.androiddemo.Helpers.Navigation.NavigationComposable
 import com.avasoft.androiddemo.ui.theme.AndroidDemoTheme
 

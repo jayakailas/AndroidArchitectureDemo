@@ -2,5 +2,8 @@
     <string name="app_name">AndroidDemo</string>
     <string name="location">Location</string>
     <string name="map">Map</string>
-    <string name="location_converter">Location Converter</string>
+    <string name="location_converter">Converter</string>
+    <string name="login_failed">Login failed. Enter valid Email Address &amp; Password</string>
+    <string name="create_acc_failed">Account creation failed</string>
+    <string name="err_occurred">An Error occurred</string>
 </resources>

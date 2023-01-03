@@ -1,4 +1,4 @@
-package com.avasoft.androiddemo.Helpers.Navigation
+package com.avasoft.androiddemo.Helpers.RouteConfig
 
 enum class NavRoute(val route:String) {
     Location("locationScreen"),
