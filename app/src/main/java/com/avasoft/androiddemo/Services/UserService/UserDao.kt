@@ -7,7 +7,7 @@ import androidx.room.Update
 import com.avasoft.androiddemo.BOs.UserBO.UserBO
 
 @Dao
-interface IUserService {
+interface UserDao {
 
     @Query("SELECT * FROM user_table WHERE email = :email")
     fun getUserData(email: String): UserBO

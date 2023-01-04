@@ -26,12 +26,10 @@ class SignUpVM(app: Application): AndroidViewModel(app){
     var isPasswordError by mutableStateOf(false)
     var passwordVisibility by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
-
     var userService: LocalUserService
-
     var failurePopUp by mutableStateOf(false)
-
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
+    var isLoadDone by mutableStateOf(false)
 
     init {
         val db = DemoDatabase.getInstance(app)
@@ -39,29 +37,82 @@ class SignUpVM(app: Application): AndroidViewModel(app){
         userService = LocalUserService(dao)
     }
 
+    fun onEmailFocusChange(isFocused: Boolean){
+        try {
+            if (isFocused) {
+                isLoadDone = true
+            } else {
+                if (isLoadDone) {
+                    setIsEmailError(email)
+                    checkIfEmailAlreadyExist()
+                }
+            }
+        } catch (ex: Exception) {
+            // handle exception
+        }
+    }
+
+    fun onPasswordFocusChange(isFocused: Boolean){
+        try {
+            if (isFocused) {
+                isLoadDone = true
+            } else {
+                if (isLoadDone)
+                    setIsPasswordError(password)
+            }
+        } catch (ex: Exception) {
+            // handle exception
+        }
+    }
+
     fun setEmailAddress(email: String){
-        this.email = email
+        try {
+            this.email = email
+        }
+        catch (ex: Exception){
+
+        }
     }
 
     fun setPassWord(password: String){
-        this.password = password
+        try {
+            this.password = password
+        }
+        catch (ex: Exception){
+
+        }
     }
 
-    fun setIsEmailError(isError: Boolean){
-        isEmailError = isError
+    fun setIsEmailError(email: String){
+        try {
+            isEmailError = email.isBlank() || !EmailValidator.isValidEmail(email)
+        }
+        catch (ex: Exception){
+
+        }
     }
 
-    fun setIsPasswordError(isError: Boolean){
-        isPasswordError = isError
+    fun setIsPasswordError(password: String){
+        try {
+            isPasswordError = password.isBlank()
+        }
+        catch (ex: Exception){
+
+        }
     }
 
     fun changePasswordVisibility(){
-        passwordVisibility = !passwordVisibility
+        try {
+            passwordVisibility = !passwordVisibility
+        }
+        catch (ex: Exception){
+
+        }
     }
 
     fun checkIfEmailAlreadyExist(){
-        try {
-            viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
                 isLoading = true
                 val result = userService.checkUserAlreadyExists(email)
                 if(result.status == ServiceStatus.Success){
@@ -73,20 +124,20 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                     isEmailExist = result.content?:false
                 }
             }
-        }
-        catch (ex: Exception){
-            isEmailExist = false
-            isLoading = false
+            catch (ex: Exception){
+                isEmailExist = false
+                isLoading = false
+            }
         }
     }
 
     fun createClicked(onSuccess: (Boolean) -> Unit) {
-        try {
-            checkIfEmailAlreadyExist()
-            isEmailError = !EmailValidator.isValidEmail(email)
-            isPasswordError = password.isBlank()
-            if(!isEmailError && !isEmailExist && !isPasswordError){
-                viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                checkIfEmailAlreadyExist()
+                isEmailError = !EmailValidator.isValidEmail(email)
+                isPasswordError = password.isBlank()
+                if(!isEmailError && !isEmailExist && !isPasswordError){
                     isLoading = true
                     val result = userService.createUser(UserBO(email, password, null, null, null, null, null))
                     if(result.status == ServiceStatus.Created){
@@ -97,22 +148,31 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                         }
                     }
                     else{
-                        onSuccess(false)
+                        withContext(Dispatchers.Main) {
+                            onSuccess(false)
+                        }
                         isLoading = false
                         failurePopUp = true
                     }
                 }
             }
-        }
-        catch (ex: Exception){
-            onSuccess(false)
-            isLoading = false
-            failurePopUp = true
+            catch (ex: Exception){
+                withContext(Dispatchers.Main) {
+                    onSuccess(false)
+                }
+                isLoading = false
+                failurePopUp = true
+            }
         }
     }
 
     fun closePopUp(){
-        failurePopUp = false
+        try {
+            failurePopUp = false
+        }
+        catch (ex: Exception){
+
+        }
     }
 }
 

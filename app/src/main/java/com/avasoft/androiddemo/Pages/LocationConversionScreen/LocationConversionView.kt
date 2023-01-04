@@ -44,7 +44,7 @@ fun LocationConversionView(vm: LocationConversionVM = viewModel()){
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Distance Conversion",
+                    stringResource(id = R.string.dist_conv_header),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 30.sp
                 )
@@ -75,13 +75,13 @@ fun LocationConversionView(vm: LocationConversionVM = viewModel()){
                             onValueChange = {},
                             label = {
                                 Text(
-                                    text = "Unit"
+                                    text = stringResource(id = R.string.unit)
                                 )
                             },
                             trailingIcon = {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_outline_keyboard_arrow_down_24),
-                                    contentDescription = "Drop down arrow",
+                                    contentDescription = stringResource(id = R.string.dropdown_desc),
                                     modifier = Modifier
                                         .padding(horizontal = 16.dp)
                                         .height(24.dp)
@@ -143,7 +143,7 @@ fun LocationConversionView(vm: LocationConversionVM = viewModel()){
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             Text(
-                "Distance is not yet calculated, please go to location tab and calculate distance.",
+                stringResource(id = R.string.distance_alert),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp,
                 textAlign = TextAlign.Center

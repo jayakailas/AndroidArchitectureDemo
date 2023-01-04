@@ -9,31 +9,54 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MapVM(app: Application, private val repository: LocalUserService): ViewModel() {
 
     var loadingState by mutableStateOf(false)
+    var failurePopUp by mutableStateOf(false)
     var email by mutableStateOf("")
-    var currentLat by mutableStateOf("")
-    var currentLng by mutableStateOf("")
-    var customLat by mutableStateOf("")
-    var customLng by mutableStateOf("")
+    var currentLat by mutableStateOf(0.0)
+    var currentLng by mutableStateOf(0.0)
+    var customLat by mutableStateOf(0.0)
+    var customLng by mutableStateOf(0.0)
+    var coordinatesList : MutableList<LatLng> = mutableListOf()
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
 
     fun pageLoad(){
-        val userEmail = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
+        try {
+            viewModelScope.launch(Dispatchers.IO) {
+                val userEmail = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
+                if(userEmail.isNotBlank()) {
+                    val result = repository.getUserByEmail(email = userEmail)
+                    currentLat = result.content?.currentLat?.toDouble()?:0.0
+                    currentLng = result.content?.currentLong?.toDouble()?:0.0
+                    customLat = result.content?.customLat?.toDouble()?:0.0
+                    customLng = result.content?.customLong?.toDouble()?:0.0
 
-        viewModelScope.launch(Dispatchers.IO) {
-            if(userEmail.isNotBlank()) {
-                val result = repository.getUserByEmail(email = userEmail)
-
-                currentLat = result.content?.currentLat?:""
-                currentLng = result.content?.currentLong?:""
-                customLat = result.content?.customLat?:""
-                customLng = result.content?.customLong?:""
+                    coordinatesList = mutableListOf(
+                        LatLng(currentLat, currentLng),
+                        LatLng(customLat, customLng)
+                    )
+                }
+                else{
+                    failurePopUp = true
+                }
             }
+        }
+        catch (ex: Exception){
+            failurePopUp = true
+        }
+    }
+
+    fun closePopUp(){
+        try {
+            failurePopUp = false
+        }
+        catch (ex: Exception){
+
         }
     }
 }

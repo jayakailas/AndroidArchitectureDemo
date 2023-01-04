@@ -16,6 +16,7 @@ fun UserBO.calculateDistance(){
         this.distance = (result[0] * kiloMeterInMeters).toString()
     }
     catch (ex: Exception){
-
+        // TODO Have to explore the folder structure to create user-defined excpetions
+        throw Exception("An error occurred")
     }
 }

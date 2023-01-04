@@ -4,7 +4,11 @@ import android.util.Patterns
 
 object EmailValidator{
     fun isValidEmail(email:String):Boolean{
-        Patterns.PHONE
-        return Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+        return try {
+            Patterns.PHONE
+            Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+        } catch (ex: Exception){
+            false
+        }
     }
 }

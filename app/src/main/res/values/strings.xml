@@ -6,4 +6,39 @@
     <string name="login_failed">Login failed. Enter valid Email Address &amp; Password</string>
     <string name="create_acc_failed">Account creation failed</string>
     <string name="err_occurred">An Error occurred</string>
+
+<!--    Login screen -->
+
+    <string name="login_header">Login</string>
+    <string name="email_address">Email Address</string>
+    <string name="email_icon_desc">Email icon</string>
+    <string name="email_err">Enter your valid email</string>
+    <string name="pwd">Password</string>
+    <string name="pwd_icon_desc">Password icon</string>
+    <string name="pwd_err">Enter your valid password</string>
+    <string name="create_acc_question">Create Account?</string>
+
+    <!--    Signup screen -->
+
+    <string name="create_acc_header">Create Account</string>
+    <string name="email_exist">Email already exist</string>
+
+<!--    Location Screen -->
+
+    <string name="address">Address: </string>
+    <string name="lat_label">Enter Latitude</string>
+    <string name="long_label">Enter Longitude</string>
+    <string name="calculate_btn">Calculate &amp; Save Distance</string>
+
+<!--   Distance conversion Screen -->
+
+    <string name="dist_conv_header">Create Account</string>
+    <string name="unit">Unit</string>
+    <string name="dropdown_desc">Dropdown Desc</string>
+    <string name="distance_alert">Distance is not yet calculated, please go to location tab and calculate distance.</string>
+
+<!--   Map Screen -->
+
+    <string name="map_alert">Save coordinates in Location Tab</string>
+
 </resources>

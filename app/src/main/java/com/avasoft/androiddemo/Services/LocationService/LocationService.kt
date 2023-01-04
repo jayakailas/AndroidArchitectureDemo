@@ -9,12 +9,10 @@ import com.avasoft.androiddemo.Services.ServiceStatus
 import java.util.*
 
 class LocationService(private val locationSource: LocationSource = APIHelper.locationService): ILocationService {
-    override suspend fun getAddress(lat: String, long: String, context: Context): ServiceResult<Address> {
-//        val result = locationSource.getAddress("$lat,$Long")
-        val geocoder = Geocoder(context, Locale.getDefault())
-        val result = geocoder.getFromLocation(lat.toDouble(), long.toDouble(),1)
-        if(result != null && result.size > 0){
-            return ServiceResult(ServiceStatus.Success, null, result[0])
+    override suspend fun getAddress(lat: String, long: String, context: Context): ServiceResult<String> {
+        val result = locationSource.getAddress("$lat,$long")
+        if(result.isSuccessful){
+            return ServiceResult(ServiceStatus.Success, null, result.body()?.results?.get(0)?.formatted_address?:"")
         }
         return ServiceResult(ServiceStatus.NoContent, null, null)
     }

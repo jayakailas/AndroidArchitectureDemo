@@ -55,7 +55,7 @@ fun LocationView(vm: LocationVM = viewModel()){
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Location",
+                stringResource(id = R.string.location),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 30.sp
             )
@@ -80,7 +80,7 @@ fun LocationView(vm: LocationVM = viewModel()){
                     .padding(5.dp)
             ) {
                 Text(
-                    "Address: ",
+                    stringResource(id = R.string.address)+" ",
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp
                 )
@@ -93,12 +93,7 @@ fun LocationView(vm: LocationVM = viewModel()){
             OutlinedTextField(
                 value = vm.customLat,
                 onValueChange = {
-                    Log.d("lat", it.toDoubleOrNull().toString())
-                    if (it.isEmpty()){
-                        vm.customLat = it
-                    } else {
-                        vm.setUserCustomLat(it)
-                    }
+                    vm.setUserCustomLat(it)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,7 +101,7 @@ fun LocationView(vm: LocationVM = viewModel()){
                     .height(56.dp),
                 placeholder = {
                     Text(
-                        text = "Enter Latitude"
+                        text = stringResource(id = R.string.lat_label)
                     )
                 }
             )
@@ -114,11 +109,7 @@ fun LocationView(vm: LocationVM = viewModel()){
             OutlinedTextField(
                 value = vm.customLong,
                 onValueChange = {
-                    if (it.isEmpty()){
-                        vm.customLong = it
-                    } else {
-                        vm.setUserCustomLong(it)
-                    }
+                    vm.setUserCustomLong(it)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -126,7 +117,7 @@ fun LocationView(vm: LocationVM = viewModel()){
                     .height(56.dp),
                 placeholder = {
                     Text(
-                        text = "Enter Longitude"
+                        text = stringResource(id = R.string.long_label)
                     )
                 }
             )
@@ -137,12 +128,12 @@ fun LocationView(vm: LocationVM = viewModel()){
                 }
             ) {
                 Text(
-                    "Calculate Distance"
+                    stringResource(id = R.string.calculate_btn)
                 )
             }
 
             Text(
-                "Distance: ${vm.distance} kms"
+                if(vm.distance.isNotBlank()) "Distance: ${vm.distance} kms" else ""
             )
         }
         

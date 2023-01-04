@@ -1,7 +1,5 @@
 package com.avasoft.androiddemo.Pages.SignUpScreen
 
-import android.widget.Toast
-import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -35,7 +33,6 @@ import com.avasoft.androiddemo.Helpers.UIComponents.Loader
 import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.R
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
     Box() {
@@ -48,14 +45,10 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            var isLoadDone by remember {
-                mutableStateOf(false)
-            }
-
             val focusManager = LocalFocusManager.current
 
             Text(
-                "Create Account",
+                stringResource(id = R.string.create_acc_header),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 30.sp
             )
@@ -64,7 +57,7 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
                 value = vm.email,
                 onValueChange = {
                     vm.setEmailAddress(it)
-                    vm.setIsEmailError(it.isBlank())
+                    vm.setIsEmailError(it)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,28 +65,21 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
                     .height(56.dp)
                     .onFocusChanged {
                         try {
-                            if (it.isFocused) {
-                                isLoadDone = true
-                            } else {
-                                if (isLoadDone) {
-                                    vm.setIsEmailError(!EmailValidator.isValidEmail(vm.email))
-                                    vm.checkIfEmailAlreadyExist()
-                                }
-                            }
+                            vm.onEmailFocusChange(it.isFocused)
                         } catch (ex: Exception) {
                             // handle exception
                         }
                     },
                 placeholder = {
                     Text(
-                        text = "Email Address"
+                        text = stringResource(id = R.string.email_address)
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Outlined.Email,
                         tint = MaterialTheme.colors.onBackground,
-                        contentDescription = "Email Icon"
+                        contentDescription = stringResource(id = R.string.email_icon_desc)
                     )
                 },
                 keyboardOptions = KeyboardOptions( imeAction = ImeAction.Done ),
@@ -104,13 +90,13 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
             )
             if (vm.isEmailError)
                 Text(
-                    text = "Enter your valid email",
+                    text = stringResource(id = R.string.email_err),
                     modifier = Modifier.align(Alignment.Start),
                     color = Color.Red
                 )
             if (vm.isEmailExist)
                 Text(
-                    text = "Email already exist",
+                    text = stringResource(id = R.string.email_exist),
                     modifier = Modifier.align(Alignment.Start),
                     color = Color.Red
                 )
@@ -119,7 +105,7 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
                 value = vm.password,
                 onValueChange = {
                     vm.setPassWord(it)
-                    vm.setIsPasswordError(it.isBlank())
+                    vm.setIsPasswordError(it)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,33 +113,27 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
                     .height(56.dp)
                     .onFocusChanged {
                         try {
-                            if (it.isFocused) {
-                                isLoadDone = true
-                            } else {
-                                if (isLoadDone)
-                                    vm.setIsPasswordError(vm.password.isBlank())
-                            }
-                        }
-                        catch (ex: Exception){
+                            vm.onPasswordFocusChange(it.isFocused)
+                        } catch (ex: Exception) {
                             // handle exception
                         }
                     },
                 placeholder = {
                     Text(
-                        text = "Password"
+                        text = stringResource(id = R.string.pwd)
                     )
                 },
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Lock,
                         tint = MaterialTheme.colors.onBackground,
-                        contentDescription = "Password Icon"
+                        contentDescription = stringResource(id = R.string.pwd_icon_desc)
                     )
                 },
                 trailingIcon = {
                     Icon(
                         painter = if(!vm.passwordVisibility) painterResource(id = R.drawable.ic_outline_visibility_24) else painterResource(id = R.drawable.ic_outline_visibility_off_24),
-                        contentDescription = "passwd eye",
+                        contentDescription = stringResource(id = R.string.pwd_icon_desc),
                         tint = Color.Unspecified,
                         modifier = Modifier.clickable(
                             interactionSource = remember{ MutableInteractionSource() },
@@ -175,12 +155,11 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
             )
             if (vm.isPasswordError)
                 Text(
-                    text = "Enter your valid password",
+                    text = stringResource(id = R.string.pwd_err),
                     modifier = Modifier.align(Alignment.Start),
                     color = Color.Red
                 )
 
-            val context = LocalContext.current
             Button(
                 onClick = {
                     vm.createClicked{ isSuccess ->
@@ -194,7 +173,7 @@ fun SignUpView(vm: SignUpVM = viewModel(), login: () -> Unit){
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Create Account",
+                    text = stringResource(id = R.string.create_acc_header),
                 )
             }
         }

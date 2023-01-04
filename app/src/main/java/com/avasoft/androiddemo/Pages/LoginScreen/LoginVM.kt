@@ -27,11 +27,10 @@ class LoginVM(app: Application): AndroidViewModel(app) {
     var isPasswordError by mutableStateOf(false)
     var passwordVisibility by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
-
     var failurePopUp by mutableStateOf(false)
-
     var userService: LocalUserService
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
+    var isLoadDone by mutableStateOf(false)
 
     init {
         val db = DemoDatabase.getInstance(app)
@@ -39,58 +38,119 @@ class LoginVM(app: Application): AndroidViewModel(app) {
         userService = LocalUserService(dao)
     }
 
+    fun onEmailFocusChange(isFocused: Boolean){
+        try {
+            if (isFocused) {
+                isLoadDone = true
+            } else {
+                if (isLoadDone) {
+                    setIsEmailError(email)
+                }
+            }
+        } catch (ex: Exception) {
+            // handle exception
+        }
+    }
+
+    fun onPasswordFocusChange(isFocused: Boolean){
+        try {
+            if (isFocused) {
+                isLoadDone = true
+            } else {
+                if (isLoadDone)
+                    setIsPasswordError(password)
+            }
+        } catch (ex: Exception) {
+            // handle exception
+        }
+    }
+
     fun setEmailAddress(email: String){
-        this.email = email
+        try {
+            this.email = email
+        }
+        catch (ex: Exception){
+
+        }
     }
 
     fun setPassWord(password: String){
-        this.password = password
+        try {
+            this.password = password
+        }
+        catch (ex: Exception){
+
+        }
     }
 
-    fun setIsEmailError(isError: Boolean){
-        isEmailError = isError
+    fun setIsEmailError(email: String){
+        try {
+            isEmailError = email.isBlank() || !EmailValidator.isValidEmail(email)
+        }
+        catch (ex: Exception){
+
+        }
     }
 
-    fun setIsPasswordError(isError: Boolean){
-        isPasswordError = isError
+    fun setIsPasswordError(password: String){
+        try {
+            isPasswordError = password.isBlank()
+        }
+        catch (ex: Exception){
+
+        }
     }
 
     fun changePasswordVisibility(){
-        passwordVisibility = !passwordVisibility
+        try {
+            passwordVisibility = !passwordVisibility
+        }
+        catch (ex: Exception){
+
+        }
     }
 
     fun loginClicked(onSuccess: (Boolean) -> Unit) {
-        try {
             viewModelScope.launch(Dispatchers.IO) {
-                isEmailError = !EmailValidator.isValidEmail(email)
-                isPasswordError = password.isBlank()
-                if(!isEmailError && !isPasswordError){
-                    isLoading = true
-                    val result = userService.validateUser(email, password)
-                    if(result.status == ServiceStatus.Success){
-                        isLoading = false
-                        sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
-                        withContext(Dispatchers.Main) {
-                            onSuccess(true)
+                try{
+                    isEmailError = !EmailValidator.isValidEmail(email)
+                    isPasswordError = password.isBlank()
+                    if(!(isEmailError && isPasswordError)){
+                        isLoading = true
+                        val result = userService.validateUser(email, password)
+                        if(result.status == ServiceStatus.Success){
+                            isLoading = false
+                            sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
+                            withContext(Dispatchers.Main) {
+                                onSuccess(true)
+                            }
+                        }
+                        else{
+                            withContext(Dispatchers.Main) {
+                                onSuccess(false)
+                            }
+                            isLoading = false
+                            failurePopUp = true
                         }
                     }
-                    else{
+                }
+                catch (ex: Exception){
+                    withContext(Dispatchers.Main) {
                         onSuccess(false)
-                        isLoading = false
-                        failurePopUp = true
                     }
+                    isLoading = false
+                    failurePopUp = true
                 }
             }
-        }
-        catch (ex: Exception){
-            onSuccess(false)
-            isLoading = false
-            failurePopUp = true
-        }
     }
 
     fun closePopUp(){
-        failurePopUp = false
+        try {
+            failurePopUp = false
+        }
+        catch (ex: Exception){
+
+        }
     }
 }
 
