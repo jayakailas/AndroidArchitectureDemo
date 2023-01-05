@@ -77,7 +77,6 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                         failurePopUp = true
                     }
                 }
-                isLoading.postValue(false)
             }
             catch (ex: Exception){
                 Log.d("Exception occurred", ex.toString())
