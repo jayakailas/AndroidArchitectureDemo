@@ -1,5 +1,6 @@
 package com.avasoft.androiddemo.Helpers.Utilities.Convertors
 
+import android.util.Log
 import com.avasoft.androiddemo.Helpers.AppConstants.Unit
 
 // TODO ask whether we need ServiceResult for Convertors too
@@ -14,6 +15,7 @@ object DistanceConvertor{
                 Unit.Yard -> "${distance.toDouble() * Unit.Yard.inKM}"
             }
         } catch (ex: Exception){
+            Log.d("Exception occurred", ex.toString())
             ""
         }
     }

@@ -3,6 +3,7 @@ package com.avasoft.androiddemo.Services.LocationService
 import android.app.PendingIntent
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.avasoft.androiddemo.Services.ServiceResult
 import com.avasoft.androiddemo.Services.ServiceStatus
@@ -77,6 +78,7 @@ class SystemLocationService(context: Context): ISystemLocationService{
                  * Both the result is false, and pending intent is null -> means that the checkGPS function has entirely failed
                  * Means that we have to intimate the user that 'Some error has occurred'.
                  */
+                Log.d("Exception occurred", ex.toString())
                 continuation.resume(ServiceResult(ServiceStatus.ServerError,null,null),null)
             }
         }
@@ -101,6 +103,7 @@ class SystemLocationService(context: Context): ISystemLocationService{
                 }
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 continuation.resume(ServiceResult(ServiceStatus.ServerError,null,null),null)
             }
         }
@@ -127,6 +130,7 @@ class SystemLocationService(context: Context): ISystemLocationService{
                 }
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 continuation.resume(ServiceResult(ServiceStatus.Success,null,null),null)
             }
         }

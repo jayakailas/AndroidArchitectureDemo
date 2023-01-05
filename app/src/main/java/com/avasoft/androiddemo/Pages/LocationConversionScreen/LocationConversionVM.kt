@@ -1,6 +1,7 @@
 package com.avasoft.androiddemo.Pages.LocationConversionScreen
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -38,6 +39,7 @@ class LocationConversionVM(app: Application, private val userService: LocalUserS
                 }
             }
             catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
                 failurePopUp = true
             }
         }
@@ -50,6 +52,7 @@ class LocationConversionVM(app: Application, private val userService: LocalUserS
             }
         }
         catch (ex: Exception){
+            Log.d("Exception occurred", ex.toString())
             failurePopUp = true
         }
     }
@@ -59,7 +62,7 @@ class LocationConversionVM(app: Application, private val userService: LocalUserS
             failurePopUp = false
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.avasoft.androiddemo.Pages.SignUpScreen
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -48,7 +49,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                 }
             }
         } catch (ex: Exception) {
-            // handle exception
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -61,7 +62,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                     setIsPasswordError(password)
             }
         } catch (ex: Exception) {
-            // handle exception
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -70,7 +71,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             this.email = email
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -79,7 +80,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             this.password = password
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -88,7 +89,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             isEmailError = email.isBlank() || !EmailValidator.isValidEmail(email)
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -97,7 +98,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             isPasswordError = password.isBlank()
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -106,7 +107,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             passwordVisibility = !passwordVisibility
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -127,6 +128,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             catch (ex: Exception){
                 isEmailExist = false
                 isLoading = false
+                Log.d("Exception occurred", ex.toString())
             }
         }
     }
@@ -162,6 +164,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                 }
                 isLoading = false
                 failurePopUp = true
+                Log.d("Exception occurred", ex.toString())
             }
         }
     }
@@ -171,7 +174,7 @@ class SignUpVM(app: Application): AndroidViewModel(app){
             failurePopUp = false
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 }

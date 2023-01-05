@@ -80,6 +80,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 isLoading.postValue(false)
             }
             catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
                 isLoading.postValue(false)
             }
         }
@@ -102,7 +103,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
             }
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -123,7 +124,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
             }
         }
         catch (ex: Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -139,6 +140,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 }
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 isLoading.postValue(false)
             }
         }
@@ -156,6 +158,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 isLoading.postValue(false)
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 isLoading.postValue(false)
             }
         }
@@ -177,7 +180,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
             }
         }
         catch (ex:Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -190,7 +193,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
             else failurePopUp = true
         }
         catch (ex:Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 
@@ -212,6 +215,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 }
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 failurePopUp = true
             }
         }
@@ -234,6 +238,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 }
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 failurePopUp = true
             }
         }
@@ -257,6 +262,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 }
             }
             catch (ex:Exception){
+                Log.d("Exception occurred", ex.toString())
                 failurePopUp = true
             }
         }
@@ -269,7 +275,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
                 locationPermissionState?.launchMultiplePermissionRequest()
             }
             catch (ex:Exception){
-
+                Log.d("Exception occurred", ex.toString())
             }
         }
     }
@@ -279,7 +285,7 @@ class LocationVM(app : Application,private val userService: ILocalUserService, p
             failurePopUp = false
         }
         catch (ex:Exception){
-
+            Log.d("Exception occurred", ex.toString())
         }
     }
 }
