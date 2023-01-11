@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun ChatListView(NavigateToRoom: () -> Unit,vm: ChatListVM) {
+fun ChatListView(NavigateToRoom: (String) -> Unit,vm: ChatListVM) {
 
-    if(vm.navigateToRoom) {
-        NavigateToRoom()
+    if(vm.navigateToRoom && vm.roomId.isNotBlank()) {
+        NavigateToRoom(vm.roomId)
     }
     Column(
         modifier = Modifier.fillMaxSize(),

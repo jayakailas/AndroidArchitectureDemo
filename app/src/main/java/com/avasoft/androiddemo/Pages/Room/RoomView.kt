@@ -4,6 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun RoomView(vm: RoomVM = viewModel()) {
+fun RoomView(roomId: String, vm: RoomVM = viewModel()) {
 
 }

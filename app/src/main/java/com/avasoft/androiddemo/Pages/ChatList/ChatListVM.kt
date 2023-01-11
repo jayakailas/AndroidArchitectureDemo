@@ -20,6 +20,7 @@ class ChatListVM(app: Application): ViewModel() {
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     var message by mutableStateOf("")
+    var roomId by mutableStateOf("")
     var navigateToRoom by mutableStateOf(false)
     val uuid = UUID.randomUUID().toString()
 

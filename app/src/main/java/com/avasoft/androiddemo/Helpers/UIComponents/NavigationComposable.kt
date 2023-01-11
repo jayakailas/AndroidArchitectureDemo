@@ -106,8 +106,8 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
 
         composable(route = NavRoute.ChatList.route) {
             ChatListView(
-                NavigateToRoom = {
-                    navController.navigate(NavRoute.Room.route)
+                NavigateToRoom = { roomId ->
+                    navController.navigate(NavRoute.Room.route+"/$roomId")
                 },
                 vm = viewModel(
                     factory = ChatListVMFactory(
@@ -117,8 +117,10 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
             )
         }
 
-        composable(route = NavRoute.Room.route) {
+        composable(route = NavRoute.Room.route+"/{roomId}") {
+            val roomId = it.arguments?.getString("roomId")?:""
             RoomView(
+                roomId = roomId
 //                vm = viewModel(
 //                    factory = ChatListVMFactory(
 //                        app = LocalContext.current.applicationContext as Application
