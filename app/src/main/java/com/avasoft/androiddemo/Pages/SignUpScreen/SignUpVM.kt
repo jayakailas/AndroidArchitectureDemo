@@ -9,12 +9,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.avasoft.androiddemo.BOs.ChatUserBO
 import com.avasoft.androiddemo.BOs.UserBO.UserBO
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.ServiceStatus
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,6 +34,8 @@ class SignUpVM(app: Application): AndroidViewModel(app){
     var failurePopUp by mutableStateOf(false)
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     var isLoadDone by mutableStateOf(false)
+
+    private val database = Firebase.firestore
 
     init {
         val db = DemoDatabase.getInstance(app)
@@ -146,7 +151,21 @@ class SignUpVM(app: Application): AndroidViewModel(app){
                         isLoading = false
                         sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
                         withContext(Dispatchers.Main) {
-                            onSuccess(true)
+
+                            /**
+                             * Firestore
+                             */
+
+                            database.collection("users").document(email)
+                                .set(ChatUserBO(email, email, mapOf("status" to "O")))
+                                .addOnSuccessListener {
+                                    onSuccess(true)
+                                }
+                                .addOnFailureListener {
+                                    onSuccess(false)
+                                    isLoading = false
+                                    failurePopUp = true
+                                }
                         }
                     }
                     else{

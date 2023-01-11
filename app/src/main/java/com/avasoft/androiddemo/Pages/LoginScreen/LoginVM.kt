@@ -126,13 +126,6 @@ class LoginVM(app: Application): AndroidViewModel(app) {
                             isLoading = false
                             sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
                             withContext(Dispatchers.Main) {
-
-                                /**
-                                 * Firestore
-                                 */
-
-
-
                                 onSuccess(true)
                             }
                         }
