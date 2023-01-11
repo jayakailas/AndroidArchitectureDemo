@@ -21,9 +21,7 @@ import com.avasoft.androiddemo.Helpers.RouteConfig.NavRoute
 @Composable
 fun BottomNavBar(bottomBarState: Boolean, navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
     val currentTab by GlobalConstants.currentTab.observeAsState(initial = NavRoute.Location.route)
-    val userEmail = navBackStackEntry?.savedStateHandle?.get<String>("userEmail")
 
     AnimatedVisibility(
         visible = bottomBarState,
