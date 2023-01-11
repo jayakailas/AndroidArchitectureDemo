@@ -9,6 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.avasoft.androiddemo.Helpers.RouteConfig.NavRoute
+import com.avasoft.androiddemo.Pages.ChatList.ChatListVMFactory
+import com.avasoft.androiddemo.Pages.ChatList.ChatListView
 import com.avasoft.androiddemo.Pages.LocationConversionScreen.LocationConversionVMFactory
 import com.avasoft.androiddemo.Pages.LocationConversionScreen.LocationConversionView
 import com.avasoft.androiddemo.Pages.LocationScreen.LocationVMFactory
@@ -19,6 +21,7 @@ import com.avasoft.androiddemo.Pages.MapScreen.MapView
 import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpVMFactory
 import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpView
 import com.avasoft.androiddemo.Pages.MapScreen.MapVMFactory
+import com.avasoft.androiddemo.Pages.Room.RoomView
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
 
@@ -46,7 +49,7 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                     }
                 },
                 login = {
-                    navController.navigate(NavRoute.Location.route){
+                    navController.navigate(NavRoute.ChatList.route){
                         popUpTo(NavRoute.Login.route){
                             inclusive = true
                         }
@@ -61,7 +64,7 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                     factory = SignUpVMFactory(LocalContext.current.applicationContext as Application)
                 )
             ){
-                navController.navigate(NavRoute.Location.route){
+                navController.navigate(NavRoute.ChatList.route){
                     popUpTo(NavRoute.SignUp.route){
                         inclusive = true
                     }
@@ -98,6 +101,29 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
                         repository = userRepository
                     )
                 )
+            )
+        }
+
+        composable(route = NavRoute.ChatList.route) {
+            ChatListView(
+                NavigateToRoom = {
+                    navController.navigate(NavRoute.Room.route)
+                },
+                vm = viewModel(
+                    factory = ChatListVMFactory(
+                        app = LocalContext.current.applicationContext as Application
+                    )
+                )
+            )
+        }
+
+        composable(route = NavRoute.Room.route) {
+            RoomView(
+//                vm = viewModel(
+//                    factory = ChatListVMFactory(
+//                        app = LocalContext.current.applicationContext as Application
+//                    )
+//                )
             )
         }
     }

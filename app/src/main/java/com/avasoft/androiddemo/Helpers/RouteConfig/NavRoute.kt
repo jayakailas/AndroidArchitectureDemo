@@ -5,5 +5,7 @@ enum class NavRoute(val route:String) {
     SignUp("signUpScreen"),
     Login("LoginScreen"),
     Map("mapScreen"),
-    LocationConverter("locationConverterScreen")
+    LocationConverter("locationConverterScreen"),
+    ChatList("chatList"),
+    Room("room")
 }
