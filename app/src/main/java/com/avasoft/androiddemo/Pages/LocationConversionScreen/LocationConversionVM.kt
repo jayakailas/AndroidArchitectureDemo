@@ -48,7 +48,7 @@ class LocationConversionVM(app: Application, private val userService: LocalUserS
     fun convert(unit: Unit) {
         try {
             if(distanceToShow.isNotBlank()){
-                distanceToShow = DistanceConvertor.convert(distanceInKm, unit)
+                distanceToShow = DistanceConvertor.convert(distanceInKm.toDouble(), unit).toString()
             }
         }
         catch (ex: Exception){

@@ -1,0 +1,77 @@
+{
+  "project_info": {
+    "project_number": "665373901426",
+    "firebase_url": "https://chat-5ebbc-default-rtdb.firebaseio.com",
+    "project_id": "chat-5ebbc",
+    "storage_bucket": "chat-5ebbc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:665373901426:android:923487c59f9f290b53f8eb",
+        "android_client_info": {
+          "package_name": "com.avasoft.androiddemo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "665373901426-gj8hr1kj16fg4e5dp7u8ks4i7jb0qhu9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCExZXM-Md0kVnWR8WRY4zwplJrXcxtDXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "665373901426-gj8hr1kj16fg4e5dp7u8ks4i7jb0qhu9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:665373901426:android:6826e9f7702a7c7553f8eb",
+        "android_client_info": {
+          "package_name": "com.mychat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "665373901426-p1jgca96ah1jhnnskqgogbq5teqrh422.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mychat",
+            "certificate_hash": "bd78b88ebeb7190decaea4fdc6c8a39e0b36b82c"
+          }
+        },
+        {
+          "client_id": "665373901426-gj8hr1kj16fg4e5dp7u8ks4i7jb0qhu9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCExZXM-Md0kVnWR8WRY4zwplJrXcxtDXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "665373901426-gj8hr1kj16fg4e5dp7u8ks4i7jb0qhu9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

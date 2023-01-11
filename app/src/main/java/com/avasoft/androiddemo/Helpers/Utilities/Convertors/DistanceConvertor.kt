@@ -3,20 +3,20 @@ package com.avasoft.androiddemo.Helpers.Utilities.Convertors
 import android.util.Log
 import com.avasoft.androiddemo.Helpers.AppConstants.Unit
 
-// TODO ask whether we need ServiceResult for Convertors too
 object DistanceConvertor{
-    fun convert(distance: String, unit: Unit): String{
+    // TODO - data type of distance should be Double
+    fun convert(distance: Double, unit: Unit): Double{
         return try {
             when(unit){
                 Unit.Kilometer -> distance
-                Unit.Meter -> "${distance.toDouble() * Unit.Meter.inKM}"
-                Unit.Miles -> "${distance.toDouble() * Unit.Miles.inKM}"
-                Unit.Foot -> "${distance.toDouble() * Unit.Foot.inKM}"
-                Unit.Yard -> "${distance.toDouble() * Unit.Yard.inKM}"
+                Unit.Meter -> distance * Unit.Meter.inKM
+                Unit.Miles -> distance * Unit.Miles.inKM
+                Unit.Foot -> distance * Unit.Foot.inKM
+                Unit.Yard -> distance * Unit.Yard.inKM
             }
         } catch (ex: Exception){
             Log.d("Exception occurred", ex.toString())
-            ""
+            0.0
         }
     }
 }

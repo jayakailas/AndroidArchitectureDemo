@@ -15,6 +15,8 @@ import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.ServiceStatus
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,6 +33,8 @@ class LoginVM(app: Application): AndroidViewModel(app) {
     var userService: LocalUserService
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     var isLoadDone by mutableStateOf(false)
+
+    private val database = Firebase.firestore
 
     init {
         val db = DemoDatabase.getInstance(app)
@@ -122,6 +126,13 @@ class LoginVM(app: Application): AndroidViewModel(app) {
                             isLoading = false
                             sharedPreference.edit().putString(GlobalConstants.USER_EMAIL, email).apply()
                             withContext(Dispatchers.Main) {
+
+                                /**
+                                 * Firestore
+                                 */
+
+
+
                                 onSuccess(true)
                             }
                         }

@@ -1,4 +1,4 @@
-package com.avasoft.androiddemo.Helpers.Navigation
+package com.avasoft.androiddemo.Helpers.UIComponents
 
 import android.app.Application
 import androidx.compose.runtime.Composable

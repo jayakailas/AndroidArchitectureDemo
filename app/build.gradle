@@ -3,6 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id("kotlin-parcelize")
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -91,4 +92,16 @@ dependencies {
 
     // Accompanist
     implementation("com.google.accompanist:accompanist-permissions:0.24.9-beta")
+
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:30.5.0')
+
+    // Add the dependency for the Realtime Database library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation 'com.google.firebase:firebase-database-ktx'
+
+    // Declare the dependency for the Cloud Firestore library
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+
+    implementation 'com.google.firebase:firebase-analytics-ktx'
 }
