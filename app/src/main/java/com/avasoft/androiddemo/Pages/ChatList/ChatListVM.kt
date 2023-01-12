@@ -9,11 +9,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.avasoft.androiddemo.BOs.ChatUserBO
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Pages.Room.Message
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -24,72 +24,141 @@ class ChatListVM(app: Application): ViewModel() {
     val db = Firebase.firestore
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
-    var message by mutableStateOf("")
+    var recipient by mutableStateOf("")
     var roomId by mutableStateOf("")
-    val uuid = UUID.randomUUID().toString()
 
     var touchPointRooms = mutableStateListOf<TouchpointRoom>()
-
-//    private val data1 = TouchpointRoom(
-//        roomId = uuid,
-//        receiverId = "a15@a.com",
-//        email = "a15@a.com"
-//    )
-//
-//    private val touchpoint = Touchpoints(
-//        userId = email,
-//        rooms = listOf(data1)
-//    )
-//
-//    private val room = Rooms(
-//        roomId = uuid,
-//        messageIds = emptyList()
-//    )
 
     init {
         Log.d("email", email)
         db.collection("touchpoints")
             .document(email)
+            .collection("rooms")
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.d("chatApp", "Touch points - Listen failed.", error)
                     return@addSnapshotListener
                 }
-                Log.d("Touch","$value")
-                for (each in Gson().fromJson<Touchpoints>(Gson().toJson(value?.data), Touchpoints::class.java).rooms ?: listOf()){
-                    touchPointRooms.add(each)
+                for (dc in value!!.documentChanges) {
+                    when (dc.type) {
+                        DocumentChange.Type.ADDED -> {
+                            touchPointRooms.add(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
+                        }
+                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
+                        DocumentChange.Type.REMOVED -> {
+                            touchPointRooms.remove(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
+                        }
+                    }
                 }
             }
     }
 
 
     /**
-     * Create room - test
+     * Create room
      */
-//    fun createRoom() {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            db.collection("rooms")
-//                .document(uuid)
-//                .set(room)
-//                .addOnSuccessListener {
-//                    Log.d("chatApp", "room - Success")
-//                    db.collection("touchpoints")
-//                        .document(email)
-//                        .set(touchpoint)
-//                        .addOnSuccessListener {
-//                            Log.d("chatApp", "touchpoint - Success")
-//                        }
-//                        .addOnFailureListener {
-//                            Log.d("chatApp", "touchpoint - Failure")
-//                        }
-//                }
-//                .addOnFailureListener {
-//                    Log.d("chatApp", "room - Failure")
-//                }
-//
-//            navigateToRoom = true
-//        }
-//    }
+    fun createRoom() {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            /**
+             * Check if this user already exist
+             * if only user exist, continue to next process
+             */
+
+            db.collection("users")
+                .document(recipient)
+                .get()
+                .addOnSuccessListener {
+
+                    val receiver = Gson().fromJson<ChatUserBO>(Gson().toJson(it.data), ChatUserBO::class.java)
+                    if(receiver != null){
+
+                        Log.d("chatApp", "createRoom() - Valid recipient: ${receiver.email}")
+                        val roomId = UUID.randomUUID().toString()
+                        /**
+                         * create touch point for sender
+                         */
+                        createTouchPoint(email,recipient,roomId)
+
+                        /**
+                         * create touch point for receiver
+                         */
+                        createTouchPoint(recipient,email, roomId)
+                    }
+                    else
+                        Log.d("chatApp", "createRoom() - Invalid recipient")
+                }
+                .addOnFailureListener {
+                    Log.d("chatApp", "createRoom() - Fetch user failed")
+                }
+        }
+    }
+
+    private fun createTouchPoint(email: String, recipient: String, roomId: String){
+        viewModelScope.launch(Dispatchers.IO) {
+            db.collection("touchpoints")
+                .document(email)
+                .get()
+                .addOnSuccessListener { touchPoint ->
+                    Log.d("chatApp", "createRoom() - Touch point - ${touchPoint.data}")
+                    if(touchPoint.data != null){
+                        db.collection("touchpoints")
+                            .document(email)
+                            .collection("rooms")
+                            .document(recipient)
+                            .get()
+                            .addOnSuccessListener { room ->
+                                Log.d("EXIST",room.toString())
+                                if(room.data != null){
+                                    Log.d("chatApp", "createRoom() - Room already exist")
+                                }
+                                else{
+                                    val roomToCreate = Rooms(roomId, listOf())
+                                    db.collection("rooms")
+                                        .document(roomId)
+                                        .set(roomToCreate)
+                                        .addOnSuccessListener {
+                                            db.collection("touchpoints")
+                                                .document(email)
+                                                .collection("rooms")
+                                                .document(recipient)
+                                                .set(roomToCreate)
+                                                .addOnSuccessListener {  }
+                                                .addOnFailureListener {  }
+                                        }
+                                        .addOnFailureListener { }
+                                }
+                            }
+                            .addOnFailureListener {
+                                Log.d("chatApp", "createRoom() - Fetch touchPoint failed")
+                            }
+                    }
+                    else{
+                        val roomToCreate = Rooms(roomId, listOf())
+                        db.collection("rooms")
+                            .document(roomId)
+                            .set(roomToCreate)
+                            .addOnSuccessListener {
+                                db.collection("touchpoints")
+                                    .document(email)
+                                    .collection("rooms")
+                                    .document(recipient)
+                                    .set(TouchpointRoom(
+                                        roomId = roomId,
+                                        receiverId = recipient,
+                                        email = recipient
+                                    ))
+                                    .addOnSuccessListener {  }
+                                    .addOnFailureListener {  }
+                            }
+                            .addOnFailureListener {  }
+                    }
+                }
+                .addOnFailureListener {
+                    Log.d("chatApp", "createRoom() - Touch point fetch failed")
+                }
+        }
+    }
 }
 
 data class Rooms(
@@ -98,7 +167,6 @@ data class Rooms(
 )
 
 data class Touchpoints(
-    val userId: String,
     val rooms: List<TouchpointRoom>
 )
 
