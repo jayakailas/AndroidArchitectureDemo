@@ -69,7 +69,6 @@ fun ChatListView(NavigateToRoom: (String) -> Unit,vm: ChatListVM) {
         Column(
             modifier = Modifier
                 .fillMaxWidth(),
-            horizontalAlignment = Alignment.End
         ) {
 
             TextField(
@@ -85,7 +84,6 @@ fun ChatListView(NavigateToRoom: (String) -> Unit,vm: ChatListVM) {
                         contentDescription = "",
                         tint = Color.Unspecified,
                         modifier = Modifier
-//                            .padding(30.dp)
                             .clickable {
                                 if(vm.recipient.isNotBlank())
                                     vm.createRoom()

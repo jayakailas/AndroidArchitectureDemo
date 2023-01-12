@@ -25,7 +25,6 @@ class ChatListVM(app: Application): ViewModel() {
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     var recipient by mutableStateOf("")
-    var roomId by mutableStateOf("")
 
     var touchPointRooms = mutableStateListOf<TouchpointRoom>()
 
@@ -33,13 +32,16 @@ class ChatListVM(app: Application): ViewModel() {
         Log.d("email", email)
         db.collection("touchpoints")
             .document(email)
-            .collection("rooms")
+            .collection("touchpointrooms")
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.d("chatApp", "Touch points - Listen failed.", error)
                     return@addSnapshotListener
                 }
+
                 for (dc in value!!.documentChanges) {
+                    Log.d("chatApp", "Touch points - Listen success ${dc.document.data}")
+
                     when (dc.type) {
                         DocumentChange.Type.ADDED -> {
                             touchPointRooms.add(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
@@ -50,6 +52,9 @@ class ChatListVM(app: Application): ViewModel() {
                         }
                     }
                 }
+
+                Log.d("chatApp", "Touch points - last Listen success. ${touchPointRooms}")
+
             }
     }
 
@@ -87,6 +92,8 @@ class ChatListVM(app: Application): ViewModel() {
                     }
                     else
                         Log.d("chatApp", "createRoom() - Invalid recipient")
+
+                    recipient = ""
                 }
                 .addOnFailureListener {
                     Log.d("chatApp", "createRoom() - Fetch user failed")
@@ -104,7 +111,7 @@ class ChatListVM(app: Application): ViewModel() {
                     if(touchPoint.data != null){
                         db.collection("touchpoints")
                             .document(email)
-                            .collection("rooms")
+                            .collection("touchpointrooms")
                             .document(recipient)
                             .get()
                             .addOnSuccessListener { room ->
@@ -118,12 +125,23 @@ class ChatListVM(app: Application): ViewModel() {
                                         .document(roomId)
                                         .set(roomToCreate)
                                         .addOnSuccessListener {
+
                                             db.collection("touchpoints")
                                                 .document(email)
-                                                .collection("rooms")
-                                                .document(recipient)
-                                                .set(roomToCreate)
-                                                .addOnSuccessListener {  }
+                                                .set(Touchpoints(userId = email))
+                                                .addOnSuccessListener {
+                                                    db.collection("touchpoints")
+                                                        .document(email)
+                                                        .collection("touchpointrooms")
+                                                        .document(recipient)
+                                                        .set(TouchpointRoom(
+                                                            roomId = roomId,
+                                                            receiverId = recipient,
+                                                            email = recipient
+                                                        ))
+                                                        .addOnSuccessListener {  }
+                                                        .addOnFailureListener {  }
+                                                }
                                                 .addOnFailureListener {  }
                                         }
                                         .addOnFailureListener { }
@@ -141,14 +159,20 @@ class ChatListVM(app: Application): ViewModel() {
                             .addOnSuccessListener {
                                 db.collection("touchpoints")
                                     .document(email)
-                                    .collection("rooms")
-                                    .document(recipient)
-                                    .set(TouchpointRoom(
-                                        roomId = roomId,
-                                        receiverId = recipient,
-                                        email = recipient
-                                    ))
-                                    .addOnSuccessListener {  }
+                                    .set(Touchpoints(userId = email))
+                                    .addOnSuccessListener {
+                                        db.collection("touchpoints")
+                                            .document(email)
+                                            .collection("touchpointrooms")
+                                            .document(recipient)
+                                            .set(TouchpointRoom(
+                                                roomId = roomId,
+                                                receiverId = recipient,
+                                                email = recipient
+                                            ))
+                                            .addOnSuccessListener {  }
+                                            .addOnFailureListener {  }
+                                    }
                                     .addOnFailureListener {  }
                             }
                             .addOnFailureListener {  }
@@ -167,7 +191,7 @@ data class Rooms(
 )
 
 data class Touchpoints(
-    val rooms: List<TouchpointRoom>
+    val userId: String,
 )
 
 data class TouchpointRoom(
