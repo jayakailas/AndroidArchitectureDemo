@@ -21,6 +21,7 @@ import com.avasoft.androiddemo.Pages.MapScreen.MapView
 import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpVMFactory
 import com.avasoft.androiddemo.Pages.SignUpScreen.SignUpView
 import com.avasoft.androiddemo.Pages.MapScreen.MapVMFactory
+import com.avasoft.androiddemo.Pages.Room.RoomVMFactory
 import com.avasoft.androiddemo.Pages.Room.RoomView
 import com.avasoft.androiddemo.Services.DemoDatabase
 import com.avasoft.androiddemo.Services.UserService.LocalUserService
@@ -120,7 +121,12 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
         composable(route = NavRoute.Room.route+"/{roomId}") {
             val roomId = it.arguments?.getString("roomId")?:""
             RoomView(
-                roomId = roomId
+                vm = viewModel(
+                    factory = RoomVMFactory(
+                        roomId = roomId,
+                        app = LocalContext.current.applicationContext as Application
+                    )
+                )
 //                vm = viewModel(
 //                    factory = ChatListVMFactory(
 //                        app = LocalContext.current.applicationContext as Application

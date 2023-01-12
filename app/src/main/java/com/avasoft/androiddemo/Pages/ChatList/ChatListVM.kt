@@ -25,7 +25,6 @@ class ChatListVM(app: Application): ViewModel() {
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     var message by mutableStateOf("")
     var roomId by mutableStateOf("")
-    var navigateToRoom by mutableStateOf(false)
     val uuid = UUID.randomUUID().toString()
 
     var touchPointRooms = mutableStateListOf<TouchpointRoom>()
@@ -47,16 +46,15 @@ class ChatListVM(app: Application): ViewModel() {
 //    )
 
     init {
+        Log.d("email", email)
         db.collection("touchpoints")
             .document(email)
             .addSnapshotListener { value, error ->
                 if (error != null) {
-                    Log.d("chatApp", "Listen failed.", error)
+                    Log.d("chatApp", "Touch points - Listen failed.", error)
                     return@addSnapshotListener
                 }
-                Log.d("TouchPoint", value.toString())
-//                Log.d("TouchPoint", value?.toObject(Touchpoints::class.java)?.rooms.toString())
-
+                Log.d("Touch","$value")
                 for (each in Gson().fromJson<Touchpoints>(Gson().toJson(value?.data), Touchpoints::class.java).rooms ?: listOf()){
                     touchPointRooms.add(each)
                 }
