@@ -1,17 +1,17 @@
 package com.avasoft.androiddemo.Pages.Room
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -20,35 +20,47 @@ import com.avasoft.androiddemo.R
 
 @Composable
 fun RoomView(vm: RoomVM) {
+    val listState = rememberLazyListState()
 
-    var message by remember {
-        mutableStateOf("")
-    }
-
-    Column() {
-        LazyColumn{
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            state = listState
+        ){
             items(vm.messages){ message ->
-                Card(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp),
-                    backgroundColor = if(message.from == vm.email) Color.Green else Color.DarkGray,
-                    contentColor = Color.White
+                        .fillMaxWidth(),
+                    horizontalAlignment = if(message.from == vm.email) Alignment.End else Alignment.Start
                 ) {
-                    Column() {
-                        Text(text = message.time)
-                        Text(text = message.body)
+                    Card(
+                        modifier = Modifier
+                            .padding(5.dp)
+                            .fillMaxWidth(0.75f),
+                        backgroundColor = if(message.from == vm.email) Color.Blue else Color.DarkGray,
+                        contentColor = Color.White,
+                        shape = RoundedCornerShape(5.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = if(message.from == vm.email) Alignment.End else Alignment.Start
+                        ) {
+                            Text(text = message.time.toDate().toString())
+                            Text(text = message.body)
+                        }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
         TextField(
-            value = message,
+            value = vm.message,
             onValueChange = {
-                message = it
+                vm.message = it
             },
             modifier = Modifier
                 .fillMaxWidth(),
@@ -59,7 +71,9 @@ fun RoomView(vm: RoomVM) {
                     contentDescription = "",
                     modifier = Modifier
                         .clickable {
-                            vm.sendMessage(message)
+                            if(vm.message.isNotBlank()) {
+                                vm.sendMessage()
+                            }
                         }
                 )
             }

@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
+import com.avasoft.androiddemo.Pages.Room.Message
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObject
@@ -93,7 +94,7 @@ class ChatListVM(app: Application): ViewModel() {
 
 data class Rooms(
     val roomId: String,
-    val messageIds: List<String>
+    val messages: List<Message>
 )
 
 data class Touchpoints(
