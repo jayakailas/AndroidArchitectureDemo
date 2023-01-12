@@ -59,20 +59,20 @@ class RoomVM(val roomId: String, private val app: Application): ViewModel() {
                     Log.d("chatApp", "Chat room - Listen failed.", error)
                     return@addSnapshotListener
                 }
-                dummyList.forEach {
-                    messages.add(it)
-                }
-//                for (dc in value!!.documentChanges) {
-//                    when (dc.type) {
-//                        DocumentChange.Type.ADDED -> {
-//                            messages.add(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
-//                        }
-//                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
-//                        DocumentChange.Type.REMOVED -> {
-//                            messages.remove(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
-//                        }
-//                    }
+//                dummyList.forEach {
+//                    messages.add(it)
 //                }
+                for (dc in value!!.documentChanges) {
+                    when (dc.type) {
+                        DocumentChange.Type.ADDED -> {
+                            messages.add(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
+                        }
+                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
+                        DocumentChange.Type.REMOVED -> {
+                            messages.remove(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
+                        }
+                    }
+                }
 //                for (each in Gson().fromJson<Rooms>(Gson().toJson(value?.), Rooms::class.java).messages ?: listOf()){
 //
 //
