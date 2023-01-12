@@ -2,10 +2,12 @@ package com.avasoft.androiddemo.Pages.Room
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -25,13 +27,27 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class RoomVM(val roomId: String, app: Application): ViewModel() {
+class RoomVM(val roomId: String, private val app: Application): ViewModel() {
 
     var message by mutableStateOf("")
+    var currentIndex by mutableStateOf(-1)
+    var replyMessage by mutableStateOf<Message?>(null)
+    var openMessageMenu by mutableStateOf(false)
     var messages = mutableStateListOf<Message>()
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     private val db = Firebase.firestore
+
+    val dummyData = Message(
+        id = "messageId",
+        from = "email",
+        roomId = "roomId",
+        body = "message",
+        type = mapOf("N" to "message"),
+        time = Timestamp.now(),
+        isDeleted = false
+    )
+    val dummyList = listOf(dummyData, dummyData, dummyData, dummyData, dummyData, dummyData, dummyData)
 
     init {
         db.collection("rooms")
@@ -43,17 +59,20 @@ class RoomVM(val roomId: String, app: Application): ViewModel() {
                     Log.d("chatApp", "Chat room - Listen failed.", error)
                     return@addSnapshotListener
                 }
-                for (dc in value!!.documentChanges) {
-                    when (dc.type) {
-                        DocumentChange.Type.ADDED -> {
-                            messages.add(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
-                        }
-                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
-                        DocumentChange.Type.REMOVED -> {
-                            messages.remove(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
-                        }
-                    }
+                dummyList.forEach {
+                    messages.add(it)
                 }
+//                for (dc in value!!.documentChanges) {
+//                    when (dc.type) {
+//                        DocumentChange.Type.ADDED -> {
+//                            messages.add(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
+//                        }
+//                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
+//                        DocumentChange.Type.REMOVED -> {
+//                            messages.remove(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
+//                        }
+//                    }
+//                }
 //                for (each in Gson().fromJson<Rooms>(Gson().toJson(value?.), Rooms::class.java).messages ?: listOf()){
 //
 //
@@ -82,7 +101,10 @@ class RoomVM(val roomId: String, app: Application): ViewModel() {
 
     fun sendMessage() {
         viewModelScope.launch(Dispatchers.IO) {
+            val messageId = UUID.randomUUID().toString()
+
             val messageBody = Message(
+                id = messageId,
                 from = email,
                 roomId = roomId,
                 body = message,
@@ -90,7 +112,6 @@ class RoomVM(val roomId: String, app: Application): ViewModel() {
                 time = Timestamp.now(),
                 isDeleted = false
             )
-            val messageId = UUID.randomUUID().toString()
 //            Log.d("Message - body",messageBody.toString())
 //            db.collection("messages")
 //                .document(messageId)
@@ -115,9 +136,26 @@ class RoomVM(val roomId: String, app: Application): ViewModel() {
 //                }
         }
     }
+
+    fun deleteMessage(messageId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            db.collection("rooms")
+                .document(roomId)
+                .collection("messages")
+                .document(messageId)
+                .delete()
+                .addOnSuccessListener {
+                    Toast.makeText(app.applicationContext, "Deleted", Toast.LENGTH_LONG).show()
+                }
+                .addOnFailureListener {
+                    Log.d("chatApp", "message not deleted")
+                }
+        }
+    }
 }
 
 data class Message(
+    val id: String,
     val from: String,
     val roomId: String,
     val body: String,
