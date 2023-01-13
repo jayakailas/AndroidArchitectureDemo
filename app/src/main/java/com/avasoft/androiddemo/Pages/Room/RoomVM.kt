@@ -30,7 +30,7 @@ import java.util.UUID
 class RoomVM(val roomId: String, private val app: Application): ViewModel() {
 
     var message by mutableStateOf("")
-    var currentIndex by mutableStateOf(-1)
+    var currentMessageIndex by mutableStateOf(-1)
     var replyMessage by mutableStateOf<Message?>(null)
     var openMessageMenu by mutableStateOf(false)
     var messages = mutableStateListOf<Message>()
@@ -112,28 +112,19 @@ class RoomVM(val roomId: String, private val app: Application): ViewModel() {
                 time = Timestamp.now(),
                 isDeleted = false
             )
-//            Log.d("Message - body",messageBody.toString())
-//            db.collection("messages")
-//                .document(messageId)
-//                .set(messageBody)
-//                .addOnSuccessListener {
-//                    Log.d("chatApp", "message - sent")
-                    db.collection("rooms")
-                        .document(roomId)
-                        .collection("messages")
-                        .document(messageId)
-                        .set(messageBody)
-                        .addOnSuccessListener {
-                            message = ""
-                            Log.d("chatApp", "message - linked to room")
-                        }
-                        .addOnFailureListener {
-                            Log.d("chatApp", "message - not linked to room")
-                        }
-//                }
-//                .addOnFailureListener {
-//                    Log.d("chatApp", "message - not sent")
-//                }
+
+            db.collection("rooms")
+                .document(roomId)
+                .collection("messages")
+                .document(messageId)
+                .set(messageBody)
+                .addOnSuccessListener {
+                    message = ""
+                    Log.d("chatApp", "message - linked to room")
+                }
+                .addOnFailureListener {
+                    Log.d("chatApp", "message - not linked to room")
+                }
         }
     }
 
