@@ -2,17 +2,17 @@ package com.avasoft.androiddemo.Pages.ChatList
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.BOs.ChatUserBO
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Pages.Room.Message
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentChange
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
@@ -36,6 +36,7 @@ class ChatListVM(app: Application): ViewModel() {
             .collection("touchpointrooms")
 
         touchPointRoomsColRef
+            .orderBy("lastMessageTime", Query.Direction.DESCENDING)
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.d("chatApp", "Touch points - Listen failed.", error)
@@ -48,6 +49,7 @@ class ChatListVM(app: Application): ViewModel() {
                     when (dc.type) {
                         DocumentChange.Type.ADDED -> {
                             touchPointRooms.add(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
+                            touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
                         }
                         DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
                         DocumentChange.Type.REMOVED -> {
@@ -205,7 +207,9 @@ class ChatListVM(app: Application): ViewModel() {
                                 .set(TouchpointRoom(
                                     roomId = roomId,
                                     receiverId = recipient,
-                                    email = recipient
+                                    email = recipient,
+                                    lastMessage = "",
+                                    lastMessageTime = Timestamp.now()
                                 ))
                                 .addOnSuccessListener {
                                     Log.d("chatApp", "createTouchPointRoomsCollection() - created touch point room")
@@ -237,7 +241,9 @@ data class Touchpoints(
 data class TouchpointRoom(
     val roomId: String,
     val receiverId: String,
-    val email: String
+    val email: String,
+    val lastMessage: String,
+    val lastMessageTime: Timestamp
 )
 
 class ChatListVMFactory(val app: Application): ViewModelProvider.NewInstanceFactory(){
