@@ -107,6 +107,16 @@ fun RoomView(vm: RoomVM) {
                         },
                         dismissContent = {
                             Column {
+                                if(message.replyMessage != null) {
+                                    ListItem (
+                                        text = {
+                                            Text(text = message.time.toDate().toString())
+                                        },
+                                        secondaryText = {
+                                            Text(text = message.body)
+                                        }
+                                    )
+                                }
                                 Card(
                                     modifier = Modifier
                                         .padding(5.dp)

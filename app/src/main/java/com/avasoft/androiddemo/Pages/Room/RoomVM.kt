@@ -32,9 +32,9 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
 
     var message by mutableStateOf("")
     var currentMessageIndex by mutableStateOf(-1)
-    var replyMessage by mutableStateOf<Message?>(null)
+    var replyMessage by mutableStateOf<ChatMessage?>(null)
     var openMessageMenu by mutableStateOf(false)
-    var messages = mutableStateListOf<Message>()
+    var messages = mutableStateListOf<ChatMessage>()
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     private val db = Firebase.firestore
@@ -51,68 +51,99 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
     val dummyList = listOf(dummyData, dummyData, dummyData, dummyData, dummyData, dummyData, dummyData)
 
     init {
-        db.collection("rooms")
-            .document(roomId)
-            .collection("messages")
-            .orderBy("time", Query.Direction.ASCENDING)
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    Log.d("chatApp", "Chat room - Listen failed.", error)
-                    return@addSnapshotListener
-                }
-//                dummyList.forEach {
-//                    messages.add(it)
-//                }
-                for (dc in value!!.documentChanges) {
-                    when (dc.type) {
-                        DocumentChange.Type.ADDED -> {
-                            messages.add(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
-                        }
-                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
-                        DocumentChange.Type.REMOVED -> {
-                            messages.remove(Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java))
+        try {
+            db.collection("rooms")
+                .document(roomId)
+                .collection("messages")
+                .orderBy("time", Query.Direction.ASCENDING)
+//                .whereEqualTo("deleted", false)
+                .addSnapshotListener { value, error ->
+                    if (error != null) {
+                        Log.d("chatApp", "Chat room - Listen failed.", error)
+                        return@addSnapshotListener
+                    }
+
+                    for (dc in value!!.documentChanges) {
+                        when (dc.type) {
+                            DocumentChange.Type.ADDED -> {
+                                val data = Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java)
+                                val chat = ChatMessage(
+                                    id = data.id,
+                                    replyMessage = if(data.type.containsKey("R")) data.type["R"]!! as Message else null,
+                                    from = data.from,
+                                    roomId = data.roomId,
+                                    body = data.body,
+                                    type = data.type,
+                                    time = data.time,
+                                    isDeleted = data.isDeleted,
+                                )
+                                messages.add(chat)
+                            }
+                            DocumentChange.Type.MODIFIED -> {
+                                Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
+                                val data = Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java)
+                                val chat = ChatMessage(
+                                    id = data.id,
+                                    replyMessage = if(data.type.containsKey("R")) data.type["R"]!! as Message else null,
+                                    from = data.from,
+                                    roomId = data.roomId,
+                                    body = data.body,
+                                    type = data.type,
+                                    time = data.time,
+                                    isDeleted = data.isDeleted,
+                                )
+                                if(data.isDeleted) {
+                                    messages.remove(chat)
+                                }
+                            }
+                            DocumentChange.Type.REMOVED -> {
+                                val data = Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java)
+                                val chat = ChatMessage(
+                                    id = data.id,
+                                    replyMessage = if(data.type.containsKey("R")) data.type["R"]!! as Message else null,
+                                    from = data.from,
+                                    roomId = data.roomId,
+                                    body = data.body,
+                                    type = data.type,
+                                    time = data.time,
+                                    isDeleted = data.isDeleted,
+                                )
+                                messages.remove(chat)
+                            }
                         }
                     }
                 }
-//                for (each in Gson().fromJson<Rooms>(Gson().toJson(value?.), Rooms::class.java).messages ?: listOf()){
-//
-//
-//                    if(!messages.contains(each))
-//                        messages.add(each)
-//
-////                    db.collection("messages")
-////                        .document(each)
-////                        .get()
-////                        .addOnSuccessListener { document ->
-////                            if (document != null) {
-////                                Log.d("Message - DOC", document.data.toString())
-////
-////                                val messageResult = Gson().fromJson<Message>(Gson().toJson(document.data), Message::class.java)
-////
-////                            } else {
-////                                Log.d("chatApp", "message - No such message")
-////                            }
-////                        }
-////                        .addOnFailureListener { exception ->
-////                            Log.d("chatApp", "message - get failed with ", exception)
-////                        }
-//                }
-            }
+        } catch (ex: Exception) {
+            Log.d("ChatException", ex.message?:"Empty")
+        }
     }
 
     fun sendMessage() {
         viewModelScope.launch(Dispatchers.IO) {
             val messageId = UUID.randomUUID().toString()
+            val messageBody: Message
 
-            val messageBody = Message(
-                id = messageId,
-                from = email,
-                roomId = roomId,
-                body = message,
-                type = mapOf("N" to message),
-                time = Timestamp.now(),
-                isDeleted = false
-            )
+            if(replyMessage!= null) {
+                messageBody = Message(
+                    id = messageId,
+                    from = email,
+                    roomId = roomId,
+                    body = message,
+                    type = mapOf("R" to replyMessage!!),
+                    time = Timestamp.now(),
+                    isDeleted = false
+                )
+            } else {
+                messageBody = Message(
+                    id = messageId,
+                    from = email,
+                    roomId = roomId,
+                    body = message,
+                    type = mapOf("N" to message),
+                    time = Timestamp.now(),
+                    isDeleted = false
+                )
+            }
 
             val messageDocRef = db
                 .collection("rooms")
@@ -141,6 +172,8 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                     message = ""
                 }
                 .addOnFailureListener {
+                    message = ""
+                    replyMessage = null
                     Log.d("chatApp", "message - not linked to room")
                 }
         }
@@ -184,7 +217,7 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                 .document(roomId)
                 .collection("messages")
                 .document(messageId)
-                .delete()
+                .update("deleted", true)
                 .addOnSuccessListener {
                     Toast.makeText(app.applicationContext, "Deleted", Toast.LENGTH_LONG).show()
                 }
@@ -200,7 +233,18 @@ data class Message(
     val from: String,
     val roomId: String,
     val body: String,
-    val type: Map<String, String>,
+    val type: Map<String, Any>,
+    val time: Timestamp,
+    val isDeleted: Boolean
+)
+
+data class ChatMessage(
+    val id: String,
+    val replyMessage: Message?,
+    val from: String,
+    val roomId: String,
+    val body: String,
+    val type: Map<String, Any>,
     val time: Timestamp,
     val isDeleted: Boolean
 )
