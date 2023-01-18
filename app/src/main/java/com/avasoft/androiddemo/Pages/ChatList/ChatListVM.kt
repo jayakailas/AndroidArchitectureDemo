@@ -51,7 +51,16 @@ class ChatListVM(app: Application): ViewModel() {
                             touchPointRooms.add(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
                             touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
                         }
-                        DocumentChange.Type.MODIFIED -> Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
+                        DocumentChange.Type.MODIFIED -> {
+                            val touchPointModified = Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java)
+                            touchPointRooms.remove(touchPointRooms
+                                .first {
+                                    it.roomId == touchPointModified.roomId
+                                }
+                            )
+                            touchPointRooms.add(touchPointModified)
+                            touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
+                        }
                         DocumentChange.Type.REMOVED -> {
                             touchPointRooms.remove(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
                         }

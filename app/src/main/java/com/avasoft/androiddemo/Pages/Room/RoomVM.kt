@@ -27,7 +27,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class RoomVM(val roomId: String, private val app: Application): ViewModel() {
+class RoomVM(private val roomId: String, val recipientEmail: String, private val app: Application): ViewModel() {
 
     var message by mutableStateOf("")
     var currentMessageIndex by mutableStateOf(-1)
@@ -113,17 +113,57 @@ class RoomVM(val roomId: String, private val app: Application): ViewModel() {
                 isDeleted = false
             )
 
-            db.collection("rooms")
+            val messageDocRef = db
+                .collection("rooms")
                 .document(roomId)
                 .collection("messages")
                 .document(messageId)
+
+            messageDocRef
                 .set(messageBody)
                 .addOnSuccessListener {
-                    message = ""
                     Log.d("chatApp", "message - linked to room")
+
+                    /**
+                     * update last message and last message time in sender's touch point room
+                     */
+                    updateLastMessage(email, recipientEmail)
+
+                    /**
+                     * update last message and last message time in receiver's touch point room
+                     */
+                    updateLastMessage(recipientEmail, email)
+
+                    /**
+                     * Empties message text field
+                     */
+                    message = ""
                 }
                 .addOnFailureListener {
                     Log.d("chatApp", "message - not linked to room")
+                }
+        }
+    }
+
+    private fun updateLastMessage(email: String, recipientEmail: String){
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val touchPointRoomDocRef = db
+                .collection("touchpoints")
+                .document(email)
+                .collection("touchpointrooms")
+                .document(recipientEmail)
+
+            touchPointRoomDocRef
+                .update(
+                    "lastMessage", message,
+                    "lastMessageTime",Timestamp.now()
+                )
+                .addOnSuccessListener {
+                    Log.d("chatApp", "last message updated")
+                }
+                .addOnFailureListener {
+                    Log.d("chatApp", "last message not updated")
                 }
         }
     }
@@ -155,8 +195,8 @@ data class Message(
     val isDeleted: Boolean
 )
 
-class RoomVMFactory(val roomId: String,val app: Application): ViewModelProvider.NewInstanceFactory(){
+class RoomVMFactory(val roomId: String, val recipientEmail: String, val app: Application): ViewModelProvider.NewInstanceFactory(){
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return RoomVM(roomId, app) as T
+        return RoomVM(roomId, recipientEmail, app) as T
     }
 }

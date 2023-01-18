@@ -107,8 +107,8 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
 
         composable(route = NavRoute.ChatList.route) {
             ChatListView(
-                NavigateToRoom = { roomId ->
-                    navController.navigate(NavRoute.Room.route+"/$roomId")
+                NavigateToRoom = { roomId, recipientEmail ->
+                    navController.navigate(NavRoute.Room.route+"/$roomId/$recipientEmail")
                 },
                 vm = viewModel(
                     factory = ChatListVMFactory(
@@ -118,12 +118,14 @@ fun NavigationComposable(navController: NavHostController, modifier: Modifier) {
             )
         }
 
-        composable(route = NavRoute.Room.route+"/{roomId}") {
+        composable(route = NavRoute.Room.route+"/{roomId}/{recipientEmail}") {
             val roomId = it.arguments?.getString("roomId")?:""
+            val recipientEmail = it.arguments?.getString("recipientEmail")?:""
             RoomView(
                 vm = viewModel(
                     factory = RoomVMFactory(
                         roomId = roomId,
+                        recipientEmail = recipientEmail,
                         app = LocalContext.current.applicationContext as Application
                     )
                 )

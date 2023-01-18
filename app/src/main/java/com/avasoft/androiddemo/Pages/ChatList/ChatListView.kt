@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.avasoft.androiddemo.R
 
 @Composable
-fun ChatListView(NavigateToRoom: (String) -> Unit,vm: ChatListVM) {
+fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
 
     Box() {
         Column(
@@ -58,7 +58,7 @@ fun ChatListView(NavigateToRoom: (String) -> Unit,vm: ChatListVM) {
                             .fillMaxWidth()
 
                             .clickable {
-                                NavigateToRoom(it.roomId)
+                                NavigateToRoom(it.roomId, it.receiverId)
                             }
                     ) {
                         Text(
