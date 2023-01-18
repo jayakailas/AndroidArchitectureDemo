@@ -2,15 +2,14 @@ package com.avasoft.androiddemo.Pages.ChatList
 
 import android.util.Log
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,9 +19,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.avasoft.androiddemo.R
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
 
@@ -31,41 +30,113 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
             modifier = Modifier
                 .fillMaxSize()
         ) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp)
+                    .height(56.dp)
+            ){
+                Text(
+                    text = "Chats",
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if(vm.selectedChat.isNotBlank() && !vm.blocked){
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_outline_block_24),
+                        contentDescription = "",
+                        tint = Color.Unspecified,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+                                vm.blockOrUnblockUser(true)
+                            }
+                    )
+                }
+
+                if(vm.selectedChat.isNotBlank() && vm.blocked){
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_unblock),
+                        contentDescription = "",
+                        tint = Color.Unspecified,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .clickable {
+                                vm.blockOrUnblockUser(false)
+                            }
+                    )
+                }
+            }
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(20.dp)
             ){
-                item{
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = "Chats",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
                 items(vm.touchPointRooms){
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-
-                            .clickable {
-                                NavigateToRoom(it.roomId, it.receiverId)
-                            }
+                            .background(if (vm.selectedChat == it.email) Color.Gray else Color.Unspecified)
                     ) {
-                        Text(
-                            text = it.email,
+                        Row(
                             modifier = Modifier
-                                .padding(vertical = 20.dp)
-                        )
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp)
+                                .combinedClickable(
+                                    onClick = {
+                                        if (vm.selectedChat == it.email) {
+                                            vm.selectedChat = ""
+                                        } else if (vm.selectedChat.isNotBlank()) {
+                                            vm.selectedChat = it.email
+                                            vm.blocked = it.blocked
+                                        } else if (!it.blocked)
+                                            NavigateToRoom(it.roomId, it.receiverId)
+                                    },
+                                    onLongClick = {
+                                        vm.selectedChat = it.email
+                                        vm.blocked = it.blocked
+                                    }
+                                ),
+                            Arrangement.SpaceBetween
+                        ) {
+                            Column() {
+                                Text(
+                                    text = it.email,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier
+                                        .padding(top = 20.dp, bottom = 10.dp)
+                                )
+
+                                Text(
+                                    text = it.lastMessage,
+                                    modifier = Modifier
+                                        .padding(bottom = 20.dp)
+                                )
+                            }
+
+                            Column {
+                                Text(
+                                    text = vm.toSimpleString(it.lastMessageTime.toDate()),
+                                    modifier = Modifier
+                                        .padding(top = 20.dp, bottom = 10.dp)
+                                )
+
+                                if(it.blocked){
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_outline_block_24),
+                                        contentDescription = "",
+                                        tint = Color.Unspecified
+                                    )
+                                }
+                            }
+                        }
+
                         Divider(thickness = 0.5.dp)
                     }
                 }

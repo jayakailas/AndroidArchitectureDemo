@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Pages.ChatList.Rooms
+import com.avasoft.androiddemo.Pages.ChatList.TouchpointRoom
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FieldValue
@@ -127,12 +128,12 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                     /**
                      * update last message and last message time in sender's touch point room
                      */
-                    updateLastMessage(email, recipientEmail)
+                    updateLastMessage(email, recipientEmail, message)
 
                     /**
                      * update last message and last message time in receiver's touch point room
                      */
-                    updateLastMessage(recipientEmail, email)
+                    updateLastMessage(recipientEmail, email, message)
 
                     /**
                      * Empties message text field
@@ -145,7 +146,7 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
         }
     }
 
-    private fun updateLastMessage(email: String, recipientEmail: String){
+    private fun updateLastMessage(email: String, recipientEmail: String, message: String){
 
         viewModelScope.launch(Dispatchers.IO) {
             val touchPointRoomDocRef = db
@@ -155,15 +156,24 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                 .document(recipientEmail)
 
             touchPointRoomDocRef
-                .update(
-                    "lastMessage", message,
-                    "lastMessageTime",Timestamp.now()
-                )
+                .get()
                 .addOnSuccessListener {
-                    Log.d("chatApp", "last message updated")
+                    if(!Gson().fromJson<TouchpointRoom>(Gson().toJson(it.data), TouchpointRoom::class.java).blocked){
+                        touchPointRoomDocRef
+                            .update(
+                                "lastMessage", message,
+                                "lastMessageTime",Timestamp.now()
+                            )
+                            .addOnSuccessListener {
+                                Log.d("chatApp", "updateLastMessage() - last message updated")
+                            }
+                            .addOnFailureListener {
+                                Log.d("chatApp", "updateLastMessage() - last message not updated")
+                            }
+                    }
                 }
                 .addOnFailureListener {
-                    Log.d("chatApp", "last message not updated")
+                    Log.d("chatApp", "updateLastMessage() - get & check for blocked id failed")
                 }
         }
     }

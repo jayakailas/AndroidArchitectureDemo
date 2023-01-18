@@ -18,6 +18,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 class ChatListVM(app: Application): ViewModel() {
@@ -27,6 +28,9 @@ class ChatListVM(app: Application): ViewModel() {
     var recipient by mutableStateOf("")
 
     var touchPointRooms = mutableStateListOf<TouchpointRoom>()
+
+    var selectedChat by mutableStateOf("")
+    var blocked by mutableStateOf(false)
 
     init {
         Log.d("email", email)
@@ -213,13 +217,16 @@ class ChatListVM(app: Application): ViewModel() {
                     touchPointDocRef.set(Touchpoints(userId = email))
                         .addOnSuccessListener {
                             touchPointRoomDocRef
-                                .set(TouchpointRoom(
-                                    roomId = roomId,
-                                    receiverId = recipient,
-                                    email = recipient,
-                                    lastMessage = "",
-                                    lastMessageTime = Timestamp.now()
-                                ))
+                                .set(
+                                    TouchpointRoom(
+                                        roomId = roomId,
+                                        receiverId = recipient,
+                                        email = recipient,
+                                        lastMessage = "",
+                                        lastMessageTime = Timestamp.now(),
+                                        blocked = false
+                                    )
+                                )
                                 .addOnSuccessListener {
                                     Log.d("chatApp", "createTouchPointRoomsCollection() - created touch point room")
                                 }
@@ -235,6 +242,30 @@ class ChatListVM(app: Application): ViewModel() {
                     Log.d("chatApp", "createTouchPointRoomsCollection() - create room failed")
                 }
         }
+    }
+
+    fun blockOrUnblockUser(isBlock: Boolean){
+
+        viewModelScope.launch(Dispatchers.IO) {
+            db
+                .collection("touchpoints")
+                .document(email)
+                .collection("touchpointrooms")
+                .document(selectedChat)
+                .update("blocked", isBlock)
+                .addOnSuccessListener {
+                    blocked = false
+                    selectedChat = ""
+                }
+                .addOnFailureListener {
+                    Log.d("chatApp", "blockUser() - block user failed")
+                }
+        }
+    }
+
+    fun toSimpleString(date: Date) : String {
+        val format = SimpleDateFormat("dd/MM/yyy")
+        return format.format(date)
     }
 }
 
@@ -252,7 +283,8 @@ data class TouchpointRoom(
     val receiverId: String,
     val email: String,
     val lastMessage: String,
-    val lastMessageTime: Timestamp
+    val lastMessageTime: Timestamp,
+    val blocked: Boolean
 )
 
 class ChatListVMFactory(val app: Application): ViewModelProvider.NewInstanceFactory(){
