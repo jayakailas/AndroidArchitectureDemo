@@ -67,9 +67,10 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                         when (dc.type) {
                             DocumentChange.Type.ADDED -> {
                                 val data = Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java)
+                                Log.d("chatMessage", "added -> ${data.type}")
                                 val chat = ChatMessage(
                                     id = data.id,
-                                    replyMessage = if(data.type.containsKey("R")) data.type["R"]!! as Message else null,
+                                    replyMessage = if(data.type.containsKey("R")) Gson().fromJson<Message>(Gson().toJson(data.type["R"]), Message::class.java) else null,
                                     from = data.from,
                                     roomId = data.roomId,
                                     body = data.body,
@@ -82,9 +83,10 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                             DocumentChange.Type.MODIFIED -> {
                                 Log.d("RealTimeDB", "Modified city: ${dc.document.data}")
                                 val data = Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java)
+                                Log.d("chatMessage", "modified -> ${data.type}")
                                 val chat = ChatMessage(
                                     id = data.id,
-                                    replyMessage = if(data.type.containsKey("R")) data.type["R"]!! as Message else null,
+                                    replyMessage = if(data.type.containsKey("R")) Gson().fromJson<Message>(Gson().toJson(data.type["R"]), Message::class.java) else null,
                                     from = data.from,
                                     roomId = data.roomId,
                                     body = data.body,
@@ -98,9 +100,10 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                             }
                             DocumentChange.Type.REMOVED -> {
                                 val data = Gson().fromJson<Message>(Gson().toJson(dc.document.data), Message::class.java)
+                                Log.d("chatMessage", "removed -> ${data.type}")
                                 val chat = ChatMessage(
                                     id = data.id,
-                                    replyMessage = if(data.type.containsKey("R")) data.type["R"]!! as Message else null,
+                                    replyMessage = if(data.type.containsKey("R")) Gson().fromJson<Message>(Gson().toJson(data.type["R"]), Message::class.java) else null,
                                     from = data.from,
                                     roomId = data.roomId,
                                     body = data.body,
@@ -124,12 +127,21 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
             val messageBody: Message
 
             if(replyMessage!= null) {
+                val mes = Message(
+                    id = replyMessage?.id?:"",
+                    from = replyMessage?.from?:"",
+                    roomId = replyMessage?.roomId?:"",
+                    body = replyMessage?.body?:"",
+                    type = mapOf("N" to replyMessage?.body!!),
+                    time = Timestamp.now(),
+                    isDeleted = replyMessage?.isDeleted!!
+                )
                 messageBody = Message(
                     id = messageId,
                     from = email,
                     roomId = roomId,
                     body = message,
-                    type = mapOf("R" to replyMessage!!),
+                    type = mapOf("R" to mes),
                     time = Timestamp.now(),
                     isDeleted = false
                 )

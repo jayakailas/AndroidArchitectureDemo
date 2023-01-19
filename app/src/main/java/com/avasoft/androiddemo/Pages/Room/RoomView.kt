@@ -32,6 +32,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.avasoft.androiddemo.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
@@ -50,29 +53,25 @@ fun RoomView(vm: RoomVM) {
             state = listState
         ){
             itemsIndexed(vm.messages){ index, message ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalAlignment = if(message.from == vm.email) Alignment.End else Alignment.Start
-                ) {
-                    var unread by remember { mutableStateOf(false) }
 
-                    val dismissState = rememberDismissState(
-                        confirmStateChange = {
-                            if (it == DismissValue.DismissedToEnd) {
-                                vm.replyMessage = message
-                                focusRequester.requestFocus()
-                            }
-                            it != DismissValue.DismissedToEnd
+                var unread by remember { mutableStateOf(false) }
+
+                val dismissState = rememberDismissState(
+                    confirmStateChange = {
+                        if (it == DismissValue.DismissedToEnd) {
+                            vm.replyMessage = message
+                            focusRequester.requestFocus()
                         }
-                    )
+                        it != DismissValue.DismissedToEnd
+                    }
+                )
 
-                    SwipeToDismiss(
-                        state = dismissState,
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        directions = setOf(DismissDirection.StartToEnd),
-                        background = {
-                            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                SwipeToDismiss(
+                    state = dismissState,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    directions = setOf(DismissDirection.StartToEnd),
+                    background = {
+                        val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
 //                            val color by animateColorAsState(
 //                                when (dismissState.targetValue) {
 //                                    DismissValue.Default -> Color.LightGray
@@ -80,112 +79,129 @@ fun RoomView(vm: RoomVM) {
 //                                    DismissValue.DismissedToStart -> Color.Red
 //                                }
 //                            )
-                            val alignment = when (direction) {
-                                DismissDirection.StartToEnd -> Alignment.CenterStart
-                                DismissDirection.EndToStart -> Alignment.CenterEnd
-                            }
-                            val icon = when (direction) {
-                                DismissDirection.StartToEnd -> Icons.Default.Done
-                                DismissDirection.EndToStart -> Icons.Default.Delete
-                            }
-                            val scale by animateFloatAsState(
-                                if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
-                            )
+                        val alignment = when (direction) {
+                            DismissDirection.StartToEnd -> Alignment.CenterStart
+                            DismissDirection.EndToStart -> Alignment.CenterEnd
+                        }
+                        val icon = when (direction) {
+                            DismissDirection.StartToEnd -> Icons.Default.Done
+                            DismissDirection.EndToStart -> Icons.Default.Delete
+                        }
+                        val scale by animateFloatAsState(
+                            if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
+                        )
 
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 20.dp),
-                                contentAlignment = Alignment.CenterStart
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.reply),
-                                    contentDescription = "Localized description",
-                                    modifier = Modifier.scale(scale)
-                                )
-                            }
-                        },
-                        dismissContent = {
-                            Column {
-                                if(message.replyMessage != null) {
-                                    ListItem (
-                                        text = {
-                                            Text(text = message.time.toDate().toString())
-                                        },
-                                        secondaryText = {
-                                            Text(text = message.body)
-                                        }
-                                    )
-                                }
-                                Card(
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.reply),
+                                contentDescription = "Localized description",
+                                modifier = Modifier.scale(scale)
+                            )
+                        }
+                    },
+                    dismissContent = {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalAlignment = if(message.from == vm.email) Alignment.End else Alignment.Start
+                        ) {
+                            if(message.replyMessage != null) {
+                                ListItem (
+                                    text = {
+                                        Text(text = message.replyMessage.time.toDate().toString())
+                                    },
+                                    secondaryText = {
+                                        Text(text = message.replyMessage.body)
+                                    },
                                     modifier = Modifier
                                         .padding(5.dp)
                                         .fillMaxWidth(0.75f)
-                                        .combinedClickable(
-                                            onClick = {
+                                        .clickable {
+//                                            val a = vm.messages.filterIndexed { index, chatMessage ->
+//                                                chatMessage.replyMessage == message.replyMessage
+//                                            }
+//
+//                                            val b = vm.messages.indexOf(a.first())
+//
+//                                            CoroutineScope(Dispatchers.Main).launch {
+//                                                listState.animateScrollToItem(b)
+//                                            }
+                                        }
+                                )
+                            }
+                            Card(
+                                modifier = Modifier
+                                    .padding(5.dp)
+                                    .fillMaxWidth(0.75f)
+                                    .combinedClickable(
+                                        onClick = {
+                                            vm.openMessageMenu = false
+                                            vm.currentMessageIndex = -1
+                                        },
+                                        onDoubleClick = {
+
+                                        },
+                                        onLongClick = {
+                                            vm.openMessageMenu = true
+                                            vm.currentMessageIndex = index
+                                        },
+                                    ),
+                                backgroundColor = if(message.from == vm.email) Color.Blue else Color.DarkGray,
+                                contentColor = Color.White,
+                                shape = RoundedCornerShape(5.dp),
+                                elevation = animateDpAsState(
+                                    if (dismissState.dismissDirection != null) 4.dp else 0.dp
+                                ).value
+                            ) {
+                                ListItem (
+                                    text = {
+                                        Text(text = message.time.toDate().toString())
+                                    },
+                                    secondaryText = {
+                                        Text(text = message.body)
+                                    }
+                                )
+                            }
+
+                            AnimatedVisibility(
+                                visible = vm.openMessageMenu && vm.currentMessageIndex == index,
+                                enter = slideInVertically(),
+                                exit = fadeOut()
+                            ) {
+                                Row {
+                                    if(message.from == vm.email){
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.delete),
+                                            contentDescription = null,
+                                            modifier = Modifier.clickable {
                                                 vm.openMessageMenu = false
                                                 vm.currentMessageIndex = -1
+                                                vm.deleteMessage(message.id)
                                             },
-                                            onDoubleClick = {
+                                            tint = Color.Red
+                                        )
+                                    }
 
-                                            },
-                                            onLongClick = {
-                                                vm.openMessageMenu = true
-                                                vm.currentMessageIndex = index
-                                            },
-                                        ),
-                                    backgroundColor = if(message.from == vm.email) Color.Blue else Color.DarkGray,
-                                    contentColor = Color.White,
-                                    shape = RoundedCornerShape(5.dp),
-                                    elevation = animateDpAsState(
-                                        if (dismissState.dismissDirection != null) 4.dp else 0.dp
-                                    ).value
-                                ) {
-                                    ListItem (
-                                        text = {
-                                            Text(text = message.time.toDate().toString())
-                                        },
-                                        secondaryText = {
-                                            Text(text = message.body)
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.reply),
+                                        contentDescription = null,
+                                        modifier = Modifier.clickable {
+                                            vm.replyMessage = message
+                                            focusRequester.requestFocus()
+                                            vm.openMessageMenu = false
+                                            vm.currentMessageIndex = -1
                                         }
                                     )
                                 }
-
-                                AnimatedVisibility(
-                                    visible = vm.openMessageMenu && vm.currentMessageIndex == index,
-                                    enter = slideInVertically(),
-                                    exit = fadeOut()
-                                ) {
-                                    Row {
-                                        if(message.from == vm.email){
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.delete),
-                                                contentDescription = null,
-                                                modifier = Modifier.clickable {
-                                                    vm.openMessageMenu = false
-                                                    vm.currentMessageIndex = -1
-                                                    vm.deleteMessage(message.id)
-                                                },
-                                                tint = Color.Red
-                                            )
-                                        }
-
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.reply),
-                                            contentDescription = null,
-                                            modifier = Modifier.clickable {
-                                                vm.replyMessage = message
-                                                focusRequester.requestFocus()
-                                                vm.openMessageMenu = false
-                                                vm.currentMessageIndex = -1
-                                            }
-                                        )
-                                    }
-                                }
                             }
                         }
-                    )
-                }
+                    }
+                )
             }
         }
 
