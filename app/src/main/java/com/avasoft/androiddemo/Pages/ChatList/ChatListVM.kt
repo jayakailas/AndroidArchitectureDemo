@@ -26,54 +26,57 @@ class ChatListVM(app: Application): ViewModel() {
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     var recipient by mutableStateOf("")
-
     var touchPointRooms = mutableStateListOf<TouchpointRoom>()
-
     var selectedChat by mutableStateOf("")
     var blocked by mutableStateOf(false)
 
     init {
-        Log.d("email", email)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                Log.d("email", email)
 
-        val touchPointRoomsColRef = db.collection("touchpoints")
-            .document(email)
-            .collection("touchpointrooms")
+                val touchPointRoomsColRef = db.collection("touchpoints")
+                    .document(email)
+                    .collection("touchpointrooms")
 
-        touchPointRoomsColRef
-            .orderBy("lastMessageTime", Query.Direction.DESCENDING)
-            .addSnapshotListener { value, error ->
-                if (error != null) {
-                    Log.d("chatApp", "Touch points - Listen failed.", error)
-                    return@addSnapshotListener
-                }
-
-                for (dc in value!!.documentChanges) {
-                    Log.d("chatApp", "Touch points - Listen success ${dc.document.data}")
-
-                    when (dc.type) {
-                        DocumentChange.Type.ADDED -> {
-                            touchPointRooms.add(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
-                            touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
+                touchPointRoomsColRef
+                    .orderBy("lastMessageTime", Query.Direction.DESCENDING)
+                    .addSnapshotListener { value, error ->
+                        if (error != null) {
+                            Log.d("chatApp", "Touch points - Listen failed.", error)
+                            return@addSnapshotListener
                         }
-                        DocumentChange.Type.MODIFIED -> {
-                            val touchPointModified = Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java)
-                            touchPointRooms.remove(touchPointRooms
-                                .first {
-                                    it.roomId == touchPointModified.roomId
+
+                        for (dc in value!!.documentChanges) {
+                            Log.d("chatApp", "Touch points - Listen success ${dc.document.data}")
+
+                            when (dc.type) {
+                                DocumentChange.Type.ADDED -> {
+                                    touchPointRooms.add(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
+                                    touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
                                 }
-                            )
-                            touchPointRooms.add(touchPointModified)
-                            touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
+                                DocumentChange.Type.MODIFIED -> {
+                                    val touchPointModified = Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java)
+                                    touchPointRooms.remove(touchPointRooms
+                                        .first {
+                                            it.roomId == touchPointModified.roomId
+                                        }
+                                    )
+                                    touchPointRooms.add(touchPointModified)
+                                    touchPointRooms = touchPointRooms.sortedByDescending { it.lastMessageTime }.toMutableStateList()
+                                }
+                                DocumentChange.Type.REMOVED -> {
+                                    touchPointRooms.remove(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
+                                }
+                            }
                         }
-                        DocumentChange.Type.REMOVED -> {
-                            touchPointRooms.remove(Gson().fromJson<TouchpointRoom>(Gson().toJson(dc.document.data), TouchpointRoom::class.java))
-                        }
+                        Log.d("chatApp", "Touch points - last Listen success. ${touchPointRooms}")
                     }
-                }
-
-                Log.d("chatApp", "Touch points - last Listen success. ${touchPointRooms}")
-
             }
+            catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
+            }
+        }
     }
 
 
@@ -82,51 +85,55 @@ class ChatListVM(app: Application): ViewModel() {
      */
     fun createRoom() {
         viewModelScope.launch(Dispatchers.IO) {
+            try {
+                /**
+                 * Check if this user already exist
+                 * if only user exist, continue to next process
+                 */
 
-            /**
-             * Check if this user already exist
-             * if only user exist, continue to next process
-             */
+                val usersDocRef = db
+                    .collection("users")
+                    .document(recipient)
 
-            val usersDocRef = db
-                .collection("users")
-                .document(recipient)
+                usersDocRef
+                    .get()
+                    .addOnSuccessListener {
 
-            usersDocRef
-                .get()
-                .addOnSuccessListener {
+                        val receiver = Gson().fromJson<ChatUserBO>(Gson().toJson(it.data), ChatUserBO::class.java)
+                        if(receiver != null){
 
-                    val receiver = Gson().fromJson<ChatUserBO>(Gson().toJson(it.data), ChatUserBO::class.java)
-                    if(receiver != null){
+                            Log.d("chatApp", "createRoom() - Valid recipient: ${receiver.email}")
+                            val roomId = UUID.randomUUID().toString()
 
-                        Log.d("chatApp", "createRoom() - Valid recipient: ${receiver.email}")
-                        val roomId = UUID.randomUUID().toString()
+                            /**
+                             * TODO - transaction make the below steps to be executed sequentially
+                             */
+
+                            /**
+                             * create touch point for sender
+                             */
+                            createTouchPoint(email,recipient,roomId)
+
+                            /**
+                             * create touch point for receiver
+                             */
+                            createTouchPoint(recipient,email, roomId)
+                        }
+                        else
+                            Log.d("chatApp", "createRoom() - Invalid recipient")
 
                         /**
-                         * TODO - transaction make the below steps to be executed sequentially
+                         * Empty the recipient state which empties the recipient text field
                          */
-
-                        /**
-                         * create touch point for sender
-                         */
-                        createTouchPoint(email,recipient,roomId)
-
-                        /**
-                         * create touch point for receiver
-                         */
-                        createTouchPoint(recipient,email, roomId)
+                        recipient = ""
                     }
-                    else
-                        Log.d("chatApp", "createRoom() - Invalid recipient")
-
-                    /**
-                     * Empty the recipient state which empties the recipient text field
-                     */
-                    recipient = ""
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "createRoom() - Fetch user failed")
-                }
+                    .addOnFailureListener {
+                        Log.d("chatApp", "createRoom() - Fetch user failed")
+                    }
+            }
+            catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
+            }
         }
     }
 
@@ -135,60 +142,64 @@ class ChatListVM(app: Application): ViewModel() {
      */
     private fun createTouchPoint(email: String, recipient: String, roomId: String){
         viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val touchPointDocRef = db
+                    .collection("touchpoints")
+                    .document(email)
 
-            val touchPointDocRef = db
-                .collection("touchpoints")
-                .document(email)
+                val touchPointRoomDocRef = touchPointDocRef
+                    .collection("touchpointrooms")
+                    .document(recipient)
 
-            val touchPointRoomDocRef = touchPointDocRef
-                .collection("touchpointrooms")
-                .document(recipient)
-
-            /**
-             * Check if the touch point is exist for the email
-             * if exist - check if touch point room collection is exist for recipient
-             * not exist - create room & touch point room collection
-             */
-            touchPointDocRef
-                .get()
-                .addOnSuccessListener { touchPoint ->
-                    Log.d("chatApp", "createTouchPoint() - Touch point - ${touchPoint.data}")
-                    if(touchPoint.data != null){
-                        /**
-                         * check if touch point room collection is exist for recipient
-                         * if exist - do nothing
-                         * not exist - create room & touch point room collection
-                         */
-                        touchPointRoomDocRef
-                            .get()
-                            .addOnSuccessListener { room ->
-                                Log.d("EXIST",room.toString())
-                                if(room.data != null){
-                                    Log.d("chatApp", "createTouchPoint() - Room already exist")
+                /**
+                 * Check if the touch point is exist for the email
+                 * if exist - check if touch point room collection is exist for recipient
+                 * not exist - create room & touch point room collection
+                 */
+                touchPointDocRef
+                    .get()
+                    .addOnSuccessListener { touchPoint ->
+                        Log.d("chatApp", "createTouchPoint() - Touch point - ${touchPoint.data}")
+                        if(touchPoint.data != null){
+                            /**
+                             * check if touch point room collection is exist for recipient
+                             * if exist - do nothing
+                             * not exist - create room & touch point room collection
+                             */
+                            touchPointRoomDocRef
+                                .get()
+                                .addOnSuccessListener { room ->
+                                    Log.d("EXIST",room.toString())
+                                    if(room.data != null){
+                                        Log.d("chatApp", "createTouchPoint() - Room already exist")
+                                    }
+                                    else{
+                                        createTouchPointRoomsCollection(
+                                            roomId = roomId,
+                                            email = email,
+                                            recipient = recipient
+                                        )
+                                    }
                                 }
-                                else{
-                                    createTouchPointRoomsCollection(
-                                        roomId = roomId,
-                                        email = email,
-                                        recipient = recipient
-                                    )
+                                .addOnFailureListener {
+                                    Log.d("chatApp", "createTouchPoint() - Fetch touchPoint for recipient failed")
                                 }
-                            }
-                            .addOnFailureListener {
-                                Log.d("chatApp", "createTouchPoint() - Fetch touchPoint for recipient failed")
-                            }
+                        }
+                        else{
+                            createTouchPointRoomsCollection(
+                                roomId = roomId,
+                                email = email,
+                                recipient = recipient
+                            )
+                        }
                     }
-                    else{
-                        createTouchPointRoomsCollection(
-                            roomId = roomId,
-                            email = email,
-                            recipient = recipient
-                        )
+                    .addOnFailureListener {
+                        Log.d("chatApp", "createRoom() - Touch point fetch failed")
                     }
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "createRoom() - Touch point fetch failed")
-                }
+            }
+            catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
+            }
         }
     }
 
@@ -197,75 +208,97 @@ class ChatListVM(app: Application): ViewModel() {
      */
     private fun createTouchPointRoomsCollection(roomId: String, email:String, recipient:String){
         viewModelScope.launch(Dispatchers.IO) {
-            val touchPointDocRef = db
-                .collection("touchpoints")
-                .document(email)
+            try {
+                val touchPointDocRef = db
+                    .collection("touchpoints")
+                    .document(email)
 
-            val roomsDocRef = db
-                .collection("rooms")
-                .document(roomId)
+                val roomsDocRef = db
+                    .collection("rooms")
+                    .document(roomId)
 
-            val touchPointRoomDocRef = touchPointDocRef
-                .collection("touchpointrooms")
-                .document(recipient)
+                val touchPointRoomDocRef = touchPointDocRef
+                    .collection("touchpointrooms")
+                    .document(recipient)
 
-            val roomToCreate = Rooms(roomId, listOf())
+                val roomToCreate = Rooms(roomId, listOf())
 
-            roomsDocRef
-                .set(roomToCreate)
-                .addOnSuccessListener {
-                    touchPointDocRef.set(Touchpoints(userId = email))
-                        .addOnSuccessListener {
-                            touchPointRoomDocRef
-                                .set(
-                                    TouchpointRoom(
-                                        roomId = roomId,
-                                        receiverId = recipient,
-                                        email = recipient,
-                                        lastMessage = "",
-                                        lastMessageTime = Timestamp.now(),
-                                        blocked = false
+                roomsDocRef
+                    .set(roomToCreate)
+                    .addOnSuccessListener {
+                        touchPointDocRef.set(Touchpoints(userId = email))
+                            .addOnSuccessListener {
+                                touchPointRoomDocRef
+                                    .set(
+                                        TouchpointRoom(
+                                            roomId = roomId,
+                                            receiverId = recipient,
+                                            email = recipient,
+                                            lastMessage = "",
+                                            lastMessageTime = Timestamp.now(),
+                                            blocked = false
+                                        )
                                     )
-                                )
-                                .addOnSuccessListener {
-                                    Log.d("chatApp", "createTouchPointRoomsCollection() - created touch point room")
-                                }
-                                .addOnFailureListener {
-                                    Log.d("chatApp", "createTouchPointRoomsCollection() - create touch point room failed")
-                                }
-                        }
-                        .addOnFailureListener {
-                            Log.d("chatApp", "createTouchPointRoomsCollection() - create touch point with userId failed")
-                        }
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "createTouchPointRoomsCollection() - create room failed")
-                }
+                                    .addOnSuccessListener {
+                                        Log.d("chatApp", "createTouchPointRoomsCollection() - created touch point room")
+                                    }
+                                    .addOnFailureListener {
+                                        Log.d("chatApp", "createTouchPointRoomsCollection() - create touch point room failed")
+                                    }
+                            }
+                            .addOnFailureListener {
+                                Log.d("chatApp", "createTouchPointRoomsCollection() - create touch point with userId failed")
+                            }
+                    }
+                    .addOnFailureListener {
+                        Log.d("chatApp", "createTouchPointRoomsCollection() - create room failed")
+                    }
+            }
+            catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
+            }
         }
     }
 
+    /**
+     * To block or un block the user i.e., update the blocked field in touch point room
+     * param: isBlock - block the user if true, un block otherwise
+     */
     fun blockOrUnblockUser(isBlock: Boolean){
 
         viewModelScope.launch(Dispatchers.IO) {
-            db
-                .collection("touchpoints")
-                .document(email)
-                .collection("touchpointrooms")
-                .document(selectedChat)
-                .update("blocked", isBlock)
-                .addOnSuccessListener {
-                    blocked = false
-                    selectedChat = ""
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "blockUser() - block user failed")
-                }
+            try {
+                db
+                    .collection("touchpoints")
+                    .document(email)
+                    .collection("touchpointrooms")
+                    .document(selectedChat)
+                    .update("blocked", isBlock)
+                    .addOnSuccessListener {
+                        blocked = false
+                        selectedChat = ""
+                    }
+                    .addOnFailureListener {
+                        Log.d("chatApp", "blockUser() - block user failed")
+                    }
+            }
+            catch (ex: Exception){
+                Log.d("Exception occurred", ex.toString())
+            }
         }
     }
 
+    /**
+     * To convert date object into string of format - dd/MM/yyy
+     */
     fun toSimpleString(date: Date) : String {
-        val format = SimpleDateFormat("dd/MM/yyy")
-        return format.format(date)
+        return try {
+            val format = SimpleDateFormat("dd/MM/yyy")
+            format.format(date)
+        } catch (ex: Exception){
+            Log.d("Exception occurred", ex.toString())
+            ""
+        }
     }
 }
 
