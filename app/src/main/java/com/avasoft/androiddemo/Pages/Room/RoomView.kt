@@ -5,6 +5,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -25,8 +26,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.avasoft.androiddemo.R
+import com.avasoft.androiddemo.ui.theme.Purple500
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
@@ -46,6 +50,22 @@ fun RoomView(vm: RoomVM) {
         modifier = Modifier
             .fillMaxSize()
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(Purple500)
+        ){
+            Text(
+                text = vm.recipientEmail,
+                modifier = Modifier
+                    .align(Alignment.Center),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -149,7 +169,7 @@ fun RoomView(vm: RoomVM) {
                                             vm.currentMessageIndex = index
                                         },
                                     ),
-                                backgroundColor = if(message.from == vm.email) Color.Blue else Color.DarkGray,
+                                backgroundColor = if(message.from == vm.email) Purple500 else Color.DarkGray,
                                 contentColor = Color.White,
                                 shape = RoundedCornerShape(5.dp),
                                 elevation = animateDpAsState(
@@ -158,7 +178,6 @@ fun RoomView(vm: RoomVM) {
                             ) {
                                 ListItem (
                                     text = {
-                                        Log.d("chatBody", "${message.body}")
                                         Text(text = message.body)
                                     },
                                     secondaryText = {

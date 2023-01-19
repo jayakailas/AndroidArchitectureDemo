@@ -39,17 +39,6 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     private val db = Firebase.firestore
 
-    val dummyData = Message(
-        id = "messageId",
-        from = "email",
-        roomId = "roomId",
-        body = "message",
-        type = mapOf("N" to "message"),
-        time = Timestamp.now(),
-        isDeleted = false
-    )
-    val dummyList = listOf(dummyData, dummyData, dummyData, dummyData, dummyData, dummyData, dummyData)
-
     init {
         try {
             db.collection("rooms")
@@ -123,120 +112,186 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
 
     fun sendMessage() {
         viewModelScope.launch(Dispatchers.IO) {
-            val messageId = UUID.randomUUID().toString()
-            val messageBody: Message
+            try {
+                val messageId = UUID.randomUUID().toString()
+                val messageBody: Message
 
-            if(replyMessage!= null) {
-                val mes = Message(
-                    id = replyMessage?.id?:"",
-                    from = replyMessage?.from?:"",
-                    roomId = replyMessage?.roomId?:"",
-                    body = replyMessage?.body?:"",
-                    type = mapOf("N" to replyMessage?.body!!),
-                    time = replyMessage?.time!!,
-                    isDeleted = replyMessage?.isDeleted!!
-                )
-                messageBody = Message(
-                    id = messageId,
-                    from = email,
-                    roomId = roomId,
-                    body = message,
-                    type = mapOf("R" to mes),
-                    time = Timestamp.now(),
-                    isDeleted = false
-                )
-            } else {
-                messageBody = Message(
-                    id = messageId,
-                    from = email,
-                    roomId = roomId,
-                    body = message,
-                    type = mapOf("N" to message),
-                    time = Timestamp.now(),
-                    isDeleted = false
-                )
+                if(replyMessage!= null) {
+                    val mes = Message(
+                        id = replyMessage?.id?:"",
+                        from = replyMessage?.from?:"",
+                        roomId = replyMessage?.roomId?:"",
+                        body = replyMessage?.body?:"",
+                        type = mapOf("N" to replyMessage?.body!!),
+                        time = replyMessage?.time!!,
+                        isDeleted = replyMessage?.isDeleted!!
+                    )
+                    messageBody = Message(
+                        id = messageId,
+                        from = email,
+                        roomId = roomId,
+                        body = message,
+                        type = mapOf("R" to mes),
+                        time = Timestamp.now(),
+                        isDeleted = false
+                    )
+                } else {
+                    messageBody = Message(
+                        id = messageId,
+                        from = email,
+                        roomId = roomId,
+                        body = message,
+                        type = mapOf("N" to message),
+                        time = Timestamp.now(),
+                        isDeleted = false
+                    )
+                }
+
+                val messageDocRef = db
+                    .collection("rooms")
+                    .document(roomId)
+                    .collection("messages")
+                    .document(messageId)
+
+                messageDocRef
+                    .set(messageBody)
+                    .addOnSuccessListener {
+                        Log.d("chatApp", "message - linked to room")
+
+                        val timeStamp = Timestamp.now()
+                        /**
+                         * update last message and last message time in sender's touch point room
+                         */
+                        updateLastMessage(
+                            email = email,
+                            recipientEmail = recipientEmail,
+                            message = message,
+                            timeStamp = timeStamp
+                        )
+
+                        /**
+                         * update last message and last message time in receiver's touch point room
+                         */
+                        updateLastMessage(
+                            email = recipientEmail,
+                            recipientEmail = email,
+                            message = message,
+                            timeStamp = timeStamp
+                        )
+
+                        /**
+                         * Empties message text field
+                         */
+                        message = ""
+                        replyMessage = null
+                    }
+                    .addOnFailureListener {
+                        Log.d("chatApp", "message - not linked to room")
+                        message = ""
+                        replyMessage = null
+                    }
+            } catch (ex: Exception) {
+                Log.d("ChatException", ex.message?:"Empty")
             }
-
-            val messageDocRef = db
-                .collection("rooms")
-                .document(roomId)
-                .collection("messages")
-                .document(messageId)
-
-            messageDocRef
-                .set(messageBody)
-                .addOnSuccessListener {
-                    Log.d("chatApp", "message - linked to room")
-
-                    /**
-                     * update last message and last message time in sender's touch point room
-                     */
-                    updateLastMessage(email, recipientEmail, message)
-
-                    /**
-                     * update last message and last message time in receiver's touch point room
-                     */
-                    updateLastMessage(recipientEmail, email, message)
-
-                    /**
-                     * Empties message text field
-                     */
-                    message = ""
-                    replyMessage = null
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "message - not linked to room")
-                    message = ""
-                    replyMessage = null
-                }
         }
     }
 
-    private fun updateLastMessage(email: String, recipientEmail: String, message: String){
+    private fun updateLastMessage(email: String, recipientEmail: String, message: String, timeStamp: Timestamp){
 
         viewModelScope.launch(Dispatchers.IO) {
-            val touchPointRoomDocRef = db
-                .collection("touchpoints")
-                .document(email)
-                .collection("touchpointrooms")
-                .document(recipientEmail)
+            try {
+                val touchPointRoomDocRef = db
+                    .collection("touchpoints")
+                    .document(email)
+                    .collection("touchpointrooms")
+                    .document(recipientEmail)
 
-            touchPointRoomDocRef
-                .get()
-                .addOnSuccessListener {
-                    if(!Gson().fromJson<TouchpointRoom>(Gson().toJson(it.data), TouchpointRoom::class.java).blocked){
-                        touchPointRoomDocRef
-                            .update(
-                                "lastMessage", message,
-                                "lastMessageTime",Timestamp.now()
-                            )
-                            .addOnSuccessListener {
-                                Log.d("chatApp", "updateLastMessage() - last message updated")
-                            }
-                            .addOnFailureListener {
-                                Log.d("chatApp", "updateLastMessage() - last message not updated")
-                            }
+                touchPointRoomDocRef
+                    .get()
+                    .addOnSuccessListener {
+                        if(!Gson().fromJson<TouchpointRoom>(Gson().toJson(it.data), TouchpointRoom::class.java).blocked){
+                            touchPointRoomDocRef
+                                .update(
+                                    "lastMessage", message,
+                                    "lastMessageTime",timeStamp
+                                )
+                                .addOnSuccessListener {
+                                    Log.d("chatApp", "updateLastMessage() - last message updated")
+                                }
+                                .addOnFailureListener {
+                                    Log.d("chatApp", "updateLastMessage() - last message not updated")
+                                }
+                        }
                     }
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "updateLastMessage() - get & check for blocked id failed")
-                }
+                    .addOnFailureListener {
+                        Log.d("chatApp", "updateLastMessage() - get & check for blocked id failed")
+                    }
+            } catch (ex: Exception) {
+                Log.d("ChatException", ex.message?:"Empty")
+            }
         }
     }
 
     fun deleteMessage(messageId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            db.collection("rooms")
-                .document(roomId)
-                .collection("messages")
-                .document(messageId)
-                .update("deleted", true)
-                .addOnSuccessListener {
-                    Toast.makeText(app.applicationContext, "Deleted", Toast.LENGTH_LONG).show()
-                }
-                .addOnFailureListener {
-                    Log.d("chatApp", "message not deleted")
-                }
+
+            try {
+                val messagesColRef = db.collection("rooms")
+                    .document(roomId)
+                    .collection("messages")
+
+                messagesColRef
+                    .document(messageId)
+                    .update("deleted", true)
+                    .addOnSuccessListener {
+                        Toast.makeText(app.applicationContext, "Deleted", Toast.LENGTH_LONG).show()
+                        messagesColRef
+                            .orderBy("time", Query.Direction.DESCENDING)
+                            .whereEqualTo("deleted", false)
+                            .limit(1)
+                            .get()
+                            .addOnSuccessListener {
+
+                                Log.d("chatApp - DELETE", it.documents[0].data.toString())
+
+                                var message = ""
+                                var time = Timestamp.now()
+
+                                if(it.documents[0].data != null){
+                                    val lastMessage = Gson().fromJson<Message>(Gson().toJson(it.documents[0].data), Message::class.java)
+                                    message = lastMessage.body
+                                    time = lastMessage.time
+                                }
+                                /**
+                                 * update last message and last message time in sender's touch point room
+                                 */
+                                updateLastMessage(
+                                    email = email,
+                                    recipientEmail = recipientEmail,
+                                    message = message,
+                                    timeStamp = time
+                                )
+
+                                /**
+                                 * update last message and last message time in receiver's touch point room
+                                 */
+                                updateLastMessage(
+                                    email = recipientEmail,
+                                    recipientEmail = email,
+                                    message = message,
+                                    timeStamp = time
+                                )
+                            }
+                            .addOnFailureListener {
+                                Log.d("chatApp", "deleteMessage() - last message not updated ${it.message}")
+                            }
+                    }
+                    .addOnFailureListener {
+                        Log.d("chatApp", "deleteMessage() - message not deleted")
+                    }
+            } catch (ex: Exception) {
+                Log.d("ChatException", ex.message?:"Empty")
+            }
         }
     }
 }

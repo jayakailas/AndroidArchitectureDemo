@@ -2,6 +2,7 @@ package com.avasoft.androiddemo.Pages.ChatList
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-class ChatListVM(app: Application): ViewModel() {
+class ChatListVM(val app: Application): ViewModel() {
     private val db = Firebase.firestore
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
@@ -275,6 +276,7 @@ class ChatListVM(app: Application): ViewModel() {
                     .document(selectedChat)
                     .update("blocked", isBlock)
                     .addOnSuccessListener {
+                        Toast.makeText(app.applicationContext, "${if(isBlock) "blocked" else "unblocked"} user: $selectedChat", Toast.LENGTH_LONG).show()
                         blocked = false
                         selectedChat = ""
                     }

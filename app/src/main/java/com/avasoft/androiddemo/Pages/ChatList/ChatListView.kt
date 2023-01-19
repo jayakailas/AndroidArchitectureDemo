@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.avasoft.androiddemo.R
+import com.avasoft.androiddemo.ui.theme.Purple500
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -35,6 +36,7 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(Purple500)
                     .padding(horizontal = 10.dp)
                     .height(56.dp)
             ){
@@ -43,14 +45,15 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
                     modifier = Modifier
                         .align(Alignment.Center),
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
 
                 if(vm.selectedChat.isNotBlank() && !vm.blocked){
                     Icon(
                         painter = painterResource(id = R.drawable.ic_outline_block_24),
                         contentDescription = "",
-                        tint = Color.Unspecified,
+                        tint = Color.White,
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .clickable {
@@ -63,7 +66,7 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_unblock),
                         contentDescription = "",
-                        tint = Color.Unspecified,
+                        tint = Color.White,
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .clickable {
@@ -132,13 +135,12 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_outline_block_24),
                                         contentDescription = "",
-                                        tint = Color.Unspecified
                                     )
                                 }
                             }
                         }
 
-                        Divider(thickness = 0.5.dp)
+                        Divider(thickness = 0.5.dp, color = Purple500)
                     }
                 }
             }
@@ -161,6 +163,7 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(10.dp)
                     .align(Alignment.BottomEnd),
             ) {
 
@@ -195,7 +198,7 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                         ,
-                        backgroundColor = Color.Blue,
+                        backgroundColor = Purple500,
                         contentColor = Color.White
                     ){
                         Icon(
