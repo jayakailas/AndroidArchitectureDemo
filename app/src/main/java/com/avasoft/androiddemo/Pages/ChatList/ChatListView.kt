@@ -2,6 +2,7 @@ package com.avasoft.androiddemo.Pages.ChatList
 
 import android.util.Log
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -166,13 +167,15 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
                 androidx.compose.animation.AnimatedVisibility(
                     visible = animationState,
                     enter = slideInHorizontally(
-                        initialOffsetX = { -(screenWidth.value.toInt() * 2) }
+                        animationSpec = tween(500),
+                        initialOffsetX = { (screenWidth.value.toInt() * 3) }
                     ),
                     exit = slideOutHorizontally(
-                        targetOffsetX = { -(screenWidth.value.toInt() * 2) }
+                        animationSpec = tween(500),
+                        targetOffsetX = { (screenWidth.value.toInt() * 3) }
                     ),
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(0.85f)
                 ) {
                     TextField(
                         value = vm.recipient,
@@ -180,31 +183,36 @@ fun ChatListView(NavigateToRoom: (String, String) -> Unit,vm: ChatListVM) {
                             vm.recipient = it
                         },
                         modifier = Modifier
-                            .fillMaxWidth()
                     )
                 }
 
-                FloatingActionButton(
-                    onClick ={},
+                Box(
                     modifier = Modifier
-                        ,
-                    backgroundColor = Color.Blue,
-                    contentColor = Color.White
-                ){
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_baseline_add_24),
-                        contentDescription = "",
-                        tint = Color.White,
+                        .weight(0.15f)
+                ) {
+                    FloatingActionButton(
+                        onClick ={},
                         modifier = Modifier
-                            .clickable {
-                                if(animationState){
-                                    if(vm.recipient.isNotBlank())
-                                        vm.createRoom()
+                            .align(Alignment.CenterEnd)
+                        ,
+                        backgroundColor = Color.Blue,
+                        contentColor = Color.White
+                    ){
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_baseline_add_24),
+                            contentDescription = "",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .clickable {
+                                    if(animationState){
+                                        if(vm.recipient.isNotBlank())
+                                            vm.createRoom()
+                                    }
+                                    animationState = !animationState
+                                    Log.d("animationState", "$animationState")
                                 }
-                                animationState = !animationState
-                                Log.d("animationState", "$animationState")
-                            }
-                    )
+                        )
+                    }
                 }
             }
 //        }
