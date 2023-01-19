@@ -1,6 +1,11 @@
 package com.avasoft.androiddemo.Pages.Room
 
+import android.Manifest
+import android.graphics.Bitmap
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,6 +22,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Send
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,9 +37,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.avasoft.androiddemo.R
 import com.avasoft.androiddemo.ui.theme.Purple500
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class,
+    ExperimentalPermissionsApi::class
+)
 @Composable
 fun RoomView(vm: RoomVM) {
     val listState = rememberLazyListState()
@@ -44,6 +54,26 @@ fun RoomView(vm: RoomVM) {
         if(vm.messages.size > 0) {
             listState.scrollToItem(vm.messages.lastIndex)
         }
+    }
+
+    /**
+     * variable bitmap to hold a state object which will be the image captured by the user
+     */
+    val bitmap = remember { mutableStateOf<Bitmap?>(null)}
+
+    /**
+     * launcher to open the device camera and it's callback to handle the captured image
+     */
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
+        bitmap.value = it
+    }
+
+    /**
+     * PermissionState that is remembered across compositions and it's callback to be executed when any action performed by the user against the permission system dialog
+     */
+    val cameraPermission = rememberPermissionState(permission = Manifest.permission.CAMERA) {
+        if (it)
+            cameraLauncher.launch(null)
     }
 
     Column(
@@ -267,17 +297,48 @@ fun RoomView(vm: RoomVM) {
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
             trailingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Send,
-                    tint = MaterialTheme.colors.onBackground,
-                    contentDescription = "",
-                    modifier = Modifier
-                        .clickable {
-                            if(vm.message.isNotBlank()) {
-                                vm.sendMessage()
+                Row(
+                    modifier = Modifier,
+                    Arrangement.SpaceBetween
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_baseline_attach_file_24),
+                        tint = MaterialTheme.colors.onBackground,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .clickable {
+
                             }
-                        }
-                )
+                    )
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_outline_photo_camera_24),
+                        tint = MaterialTheme.colors.onBackground,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .clickable {
+                                /**
+                                 * Check for PermissionState and based upon which launch camera
+                                 */
+                                cameraPermission.launchPermissionRequest()
+                            }
+                    )
+
+                    Icon(
+                        imageVector = Icons.Outlined.Send,
+                        tint = MaterialTheme.colors.onBackground,
+                        contentDescription = "",
+                        modifier = Modifier
+                            .padding(horizontal = 10.dp)
+                            .clickable {
+                                if(vm.message.isNotBlank()) {
+                                    vm.sendMessage()
+                                }
+                            }
+                    )
+                }
             },
             placeholder = {
                 Text(text = "Enter message")
