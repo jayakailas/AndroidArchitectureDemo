@@ -55,8 +55,8 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
             db.collection("rooms")
                 .document(roomId)
                 .collection("messages")
+                .whereEqualTo("deleted", false)
                 .orderBy("time", Query.Direction.ASCENDING)
-//                .whereEqualTo("deleted", false)
                 .addSnapshotListener { value, error ->
                     if (error != null) {
                         Log.d("chatApp", "Chat room - Listen failed.", error)
@@ -133,7 +133,7 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                     roomId = replyMessage?.roomId?:"",
                     body = replyMessage?.body?:"",
                     type = mapOf("N" to replyMessage?.body!!),
-                    time = Timestamp.now(),
+                    time = replyMessage?.time!!,
                     isDeleted = replyMessage?.isDeleted!!
                 )
                 messageBody = Message(
@@ -182,11 +182,12 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                      * Empties message text field
                      */
                     message = ""
+                    replyMessage = null
                 }
                 .addOnFailureListener {
+                    Log.d("chatApp", "message - not linked to room")
                     message = ""
                     replyMessage = null
-                    Log.d("chatApp", "message - not linked to room")
                 }
         }
     }
