@@ -1,6 +1,5 @@
 package com.avasoft.androiddemo.Pages.Room
 
-import android.Manifest
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.BackHandler
@@ -30,8 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,18 +40,15 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.avasoft.androiddemo.R
 import com.avasoft.androiddemo.ui.theme.Purple500
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class,
-    ExperimentalPermissionsApi::class
-)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun RoomView(vm: RoomVM) {
     val listState = rememberLazyListState()
     val focusRequester = FocusRequester()
     val coroutineScope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(key1 = vm.messages.size) {
         if(vm.messages.size > 0) {
@@ -125,6 +122,7 @@ fun RoomView(vm: RoomVM) {
                         confirmStateChange = {
                             if (it == DismissValue.DismissedToEnd) {
                                 vm.replyMessage = message
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 focusRequester.requestFocus()
                             }
                             it != DismissValue.DismissedToEnd
@@ -380,6 +378,7 @@ fun RoomView(vm: RoomVM) {
                                 .padding(horizontal = 10.dp)
                                 .clickable {
                                     if (vm.message.isNotBlank()) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         vm.sendMessage()
                                     }
                                 }
@@ -452,6 +451,7 @@ fun RoomView(vm: RoomVM) {
                                         modifier = Modifier
                                             .padding(horizontal = 10.dp)
                                             .clickable {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                 vm.sendAttachment()
                                             }
                                     )

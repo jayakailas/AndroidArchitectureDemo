@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -50,10 +49,11 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
     var camPopUp by mutableStateOf(false)
     var sentImage by mutableStateOf(false)
     var imgCaptured by mutableStateOf(false)
+    private val firestoreDb = Firebase.firestore
 
     init {
         try {
-            db.collection("rooms")
+            firestoreDb.collection("rooms")
                 .document(roomId)
                 .collection("messages")
                 .whereEqualTo("deleted", false)
@@ -202,21 +202,16 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                             message = message,
                             timeStamp = timeStamp
                         )
-
-                        /**
-                         * Empties message text field
-                         */
-                        message = ""
-                        replyMessage = null
-                        imgUrl = Uri.EMPTY
-                        attatchmentName = ""
-                        imgCaptured = false
                     }
                     .addOnFailureListener {
                         Log.d("chatApp", "message - not linked to room")
-                        message = ""
-                        replyMessage = null
                     }
+
+                message = ""
+                replyMessage = null
+                imgUrl = Uri.EMPTY
+                attatchmentName = ""
+                imgCaptured = false
             } catch (ex: Exception) {
                 Log.d("ChatException", ex.message?:"Empty")
             }
