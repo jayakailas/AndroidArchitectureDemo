@@ -1,31 +1,34 @@
 package com.avasoft.androiddemo.Pages.Room
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
-import com.avasoft.androiddemo.Pages.ChatList.Rooms
 import com.avasoft.androiddemo.Pages.ChatList.TouchpointRoom
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.util.UUID
 
 class RoomVM(private val roomId: String, val recipientEmail: String, private val app: Application): ViewModel() {
@@ -38,6 +41,15 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
     val sharedPreference = app.applicationContext.getSharedPreferences(GlobalConstants.USER_SHAREDPREFERENCE,0)
     val email = sharedPreference.getString(GlobalConstants.USER_EMAIL, "")?:""
     private val db = Firebase.firestore
+    private val storage = Firebase.storage
+    private val storageRef = storage.reference
+    var imgUrl: Uri = Uri.EMPTY
+    var attatchmentName = ""
+    var bitmap by mutableStateOf<Bitmap?>(null)
+    val FIVE_MEGABYTE: Long = (1024 * 1024) * 5
+    var camPopUp by mutableStateOf(false)
+    var sentImage by mutableStateOf(false)
+    var imgCaptured by mutableStateOf(false)
 
     init {
         try {
@@ -135,7 +147,19 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                         time = Timestamp.now(),
                         isDeleted = false
                     )
-                } else {
+                }
+                else if(imgUrl != Uri.EMPTY){
+                    messageBody = Message(
+                        id = messageId,
+                        from = email,
+                        roomId = roomId,
+                        body = message,
+                        type = mapOf("A" to (attatchmentName to imgUrl)),
+                        time = Timestamp.now(),
+                        isDeleted = false
+                    )
+                }
+                else {
                     messageBody = Message(
                         id = messageId,
                         from = email,
@@ -184,6 +208,9 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                          */
                         message = ""
                         replyMessage = null
+                        imgUrl = Uri.EMPTY
+                        attatchmentName = ""
+                        imgCaptured = false
                     }
                     .addOnFailureListener {
                         Log.d("chatApp", "message - not linked to room")
@@ -293,6 +320,70 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                 Log.d("ChatException", ex.message?:"Empty")
             }
         }
+    }
+
+    fun sendAttachment() {
+
+        val imgRef = storageRef.child("images/${bitmap?.config?.name}_${bitmap?.generationId}.jpg")
+        attatchmentName = "${bitmap?.config?.name}_${bitmap?.generationId}.jpg"
+        val baos = ByteArrayOutputStream()
+        bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val data = baos.toByteArray()
+
+        val uploadTask = imgRef.putBytes(data)
+        uploadTask.addOnFailureListener {
+            Log.d("chatApp", "sendAttachment() - attachment not uploaded")
+        }.addOnSuccessListener { taskSnapshot ->
+            // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
+            Log.d("chatApp", "sendAttachment() - attachment uploaded , contentType - ${taskSnapshot.metadata?.contentType}")
+        }
+
+        val urlTask = uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            imgRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("chatApp", "sendAttachment() - URL - ${task.result}")
+                imgUrl = task.result
+                sendMessage()
+            } else {
+                Log.d("chatApp", "sendAttachment() - URL - failed")
+            }
+        }
+    }
+
+    fun downloadImage(imgName: String) {
+        val imgRef = storageRef.child("images/${imgName}")
+
+        imgRef.getBytes(FIVE_MEGABYTE)
+            .addOnSuccessListener {
+                val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+                Log.d("chatApp", "downloadAttachment() - bitmap - $bitmap")
+                val fos = FileOutputStream(File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), imgName))
+                if(!bitmap.compress(Bitmap.CompressFormat.JPEG, 9, fos)){
+                    Log.d("chatApp", "downloadAttachment() - download failed - failed")
+                }
+            }
+            .addOnFailureListener {
+                Log.d("chatApp", "downloadAttachment() - getBytes failed")
+            }
+    }
+
+    fun showSentImage(imgName: String){
+        val imgRef = storageRef.child("images/${imgName}")
+
+        imgRef.getBytes(FIVE_MEGABYTE)
+            .addOnSuccessListener {
+                bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+                sentImage = true
+            }
+            .addOnFailureListener {
+                Log.d("chatApp", "showSentImage() - getBytes failed")
+            }
     }
 }
 
