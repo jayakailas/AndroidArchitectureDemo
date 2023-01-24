@@ -1,6 +1,5 @@
 package com.avasoft.androiddemo.Pages.Room
 
-import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,27 +62,18 @@ fun RoomView(vm: RoomVM) {
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) {
         if(it != null){
             vm.bitmap = it
-            vm.camPopUp = false
             vm.imgCaptured = true
         }
     }
-
+    
     /**
      * Create launcher to launch the gallery
      */
-    val galleryLauncher = rememberLauncherForActivityResult(contract =
+    val fileLauncher = rememberLauncherForActivityResult(contract =
     ActivityResultContracts.GetContent()) { uri: Uri? ->
 
         if(uri != null){
-            // Convert imageUri to bitmap
-
-            val inputStream =  context.contentResolver.openInputStream(uri ?: Uri.EMPTY)
-            // convert input stream to byteArray
-            val byteArray = inputStream?.readBytes()
-            // byteArray to bitmap
-            vm.bitmap = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray?.size?:0)
-            vm.camPopUp = false
-            vm.imgCaptured = true
+            vm.sendAttachment(uri)
         }
     }
 
@@ -224,24 +213,23 @@ fun RoomView(vm: RoomVM) {
                                     ListItem (
                                         text = {
                                             Column {
-                                                if(message.type.keys.contains("A")){
-                                                    val innerMap = message.type["A"] as Map<String, Any>
+                                                if(message.attachment != null){
                                                     Row(
                                                         modifier = Modifier
                                                             .fillMaxWidth()
                                                             .background(Color.White)
                                                             .clickable {
                                                                 if(message.from != vm.email){
-                                                                    vm.downloadImage(innerMap["first"].toString())
+                                                                    vm.downloadFile(message.attachment["first"].toString())
                                                                 }
                                                                 else{
-                                                                    vm.showSentImage(innerMap["first"].toString())
+                                                                    vm.showSentImage(message.attachment["first"].toString())
                                                                 }
                                                             },
                                                         Arrangement.SpaceBetween
                                                     ) {
                                                         Text(
-                                                            text = innerMap["first"].toString(),
+                                                            text = message.attachment["first"].toString(),
                                                             color = Color.DarkGray,
                                                         )
                                                         if(message.from != vm.email){
@@ -355,7 +343,7 @@ fun RoomView(vm: RoomVM) {
                             modifier = Modifier
                                 .padding(horizontal = 10.dp)
                                 .clickable {
-
+                                    fileLauncher.launch("*/*")
                                 }
                         )
 
@@ -366,7 +354,7 @@ fun RoomView(vm: RoomVM) {
                             modifier = Modifier
                                 .padding(horizontal = 10.dp)
                                 .clickable {
-                                    vm.camPopUp = true
+                                    cameraLauncher.launch(null)
                                 }
                         )
 
@@ -396,142 +384,64 @@ fun RoomView(vm: RoomVM) {
          * Image view
          */
         if(vm.imgCaptured) {
-
-            Popup(
-                onDismissRequest = {
-                    vm.imgCaptured = false
-                },
-                properties = PopupProperties(dismissOnBackPress = true)
-            ) {
-                BackHandler(enabled = true) {
-                    vm.imgCaptured = false
-                }
-                Surface(
-                    color = Color.Transparent
-                ) {
-                    Box(modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0x88323F4B))
-                    ){
-                        Image(
-                            bitmap = vm.bitmap!!.asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.FillBounds
-                        )
-                        Icon(
-                            painter = painterResource(id = R.drawable.cancel),
-                            contentDescription = "Cancel icon",
-                            modifier = Modifier
-                                .padding(20.dp)
-                                .align(Alignment.TopEnd)
-                                .clickable {
-                                    vm.imgCaptured = false
-                                },
-                            tint = Color.Unspecified
-                        )
-                        TextField(
-                            value = vm.message,
-                            onValueChange = {
-                                vm.message = it
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .align(Alignment.BottomCenter)
-                                .focusRequester(focusRequester),
-                            trailingIcon = {
-                                Row(
-                                    modifier = Modifier,
-                                    Arrangement.SpaceBetween
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Send,
-                                        tint = MaterialTheme.colors.onBackground,
-                                        contentDescription = "",
-                                        modifier = Modifier
-                                            .padding(horizontal = 10.dp)
-                                            .clickable {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                vm.sendAttachment()
-                                            }
-                                    )
-                                }
-                            },
-                            placeholder = {
-                                Text(text = "Enter message")
-                            }
-                        )
-                    }
-                }
+            BackHandler(enabled = true) {
+                vm.imgCaptured = false
             }
-        }
-
-        /**
-         * Image pop up
-         * Options - Take Photo / Upload From Device
-         */
-        if(vm.camPopUp){
-            Popup(
-                onDismissRequest = {
-                    vm.camPopUp = false
-                },
-                properties = PopupProperties(dismissOnBackPress = true)
+            Surface(
+                color = Color.Transparent
             ) {
-                BackHandler(enabled = true) {
-                    vm.camPopUp = false
-                }
-
                 Box(modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0x88323F4B))){
-                    Card(modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp)
-                        .align(Alignment.Center),
-                        shape = RoundedCornerShape(16.dp)) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 32.dp, end = 32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Button(
-                                onClick = {
-                                    cameraLauncher.launch(null)
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 32.dp)
-                                    .height(56.dp)
+                    .background(Color(0x88323F4B))
+                ){
+                    Image(
+                        bitmap = vm.bitmap!!.asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds
+                    )
+                    Icon(
+                        painter = painterResource(id = R.drawable.cancel),
+                        contentDescription = "Cancel icon",
+                        modifier = Modifier
+                            .padding(20.dp)
+                            .align(Alignment.TopEnd)
+                            .clickable {
+                                vm.imgCaptured = false
+                            },
+                        tint = Color.Unspecified
+                    )
+                    TextField(
+                        value = vm.message,
+                        onValueChange = {
+                            vm.message = it
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .focusRequester(focusRequester),
+                        trailingIcon = {
+                            Row(
+                                modifier = Modifier,
+                                Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = "Take Photo",
-                                    style = TextStyle(
-                                        fontSize = 15.sp,
-                                        color = Color.White
-                                    )
+                                Icon(
+                                    imageVector = Icons.Outlined.Send,
+                                    tint = MaterialTheme.colors.onBackground,
+                                    contentDescription = "",
+                                    modifier = Modifier
+                                        .padding(horizontal = 10.dp)
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            vm.sendImage()
+                                        }
                                 )
                             }
-
-                            Button(
-                                onClick = {
-                                    galleryLauncher.launch("image/*")
-                                },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 32.dp)
-                                    .height(56.dp)
-                            ) {
-                                Text(
-                                    text = "Upload From Device",
-                                    style = TextStyle(
-                                        fontSize = 15.sp,
-                                        color = Color.White
-                                    )
-                                )
-                            }
+                        },
+                        placeholder = {
+                            Text(text = "Enter message")
                         }
-                    }
+                    )
                 }
             }
         }
