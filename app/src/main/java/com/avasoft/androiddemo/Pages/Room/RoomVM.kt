@@ -204,16 +204,16 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
                             message = message,
                             timeStamp = timeStamp
                         )
+
+                        message = ""
+                        replyMessage = null
+                        attachmentUrl = Uri.EMPTY
+                        attatchmentName = ""
+                        imgCaptured = false
                     }
                     .addOnFailureListener {
                         Log.d("chatApp", "message - not linked to room")
                     }
-
-                message = ""
-                replyMessage = null
-                attachmentUrl = Uri.EMPTY
-                attatchmentName = ""
-                imgCaptured = false
             } catch (ex: Exception) {
                 Log.d("ChatException", ex.message?:"Empty")
             }
