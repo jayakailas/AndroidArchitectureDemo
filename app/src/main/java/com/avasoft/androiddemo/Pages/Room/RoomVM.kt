@@ -15,6 +15,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.avasoft.androiddemo.BOs.ChatUserBO
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Pages.ChatList.TouchpointRoom
 import com.google.firebase.Timestamp
@@ -48,10 +49,25 @@ class RoomVM(private val roomId: String, val recipientEmail: String, private val
     val FIVE_MEGABYTE: Long = (1024 * 1024) * 5
     var sentImage by mutableStateOf(false)
     var imgCaptured by mutableStateOf(false)
+    var isRecipientOnline by mutableStateOf(false)
+    var recipientLastOnline by mutableStateOf("")
     private val firestoreDb = Firebase.firestore
 
     init {
         try {
+            firestoreDb.collection("users")
+                .document(recipientEmail)
+                .addSnapshotListener { value, error ->
+                    if(error != null) {
+                        Log.d("chatApp", "Chat room - Listen failed.", error)
+                        return@addSnapshotListener
+                    }
+
+                    val data = Gson().fromJson<ChatUserBO>(Gson().toJson(value?.data), ChatUserBO::class.java)
+
+                    isRecipientOnline = data.online
+                }
+
             firestoreDb.collection("rooms")
                 .document(roomId)
                 .collection("messages")

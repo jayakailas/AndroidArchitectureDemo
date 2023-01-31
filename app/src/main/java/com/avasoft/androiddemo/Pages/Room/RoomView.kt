@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Send
@@ -89,14 +90,43 @@ fun RoomView(vm: RoomVM) {
                     .height(56.dp)
                     .background(Purple500)
             ){
-                Text(
-                    text = vm.recipientEmail,
-                    modifier = Modifier
-                        .align(Alignment.Center),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = vm.recipientEmail,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+
+                    if(vm.isRecipientOnline) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.circle),
+                                contentDescription = "",
+                                tint = Color.Green,
+                                modifier = Modifier.size(17.dp)
+                            )
+
+                            Text(
+                                text = "ONLINE",
+                                modifier = Modifier
+                                    .align(Alignment.CenterVertically)
+                                    .padding(start = 5.dp),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
             }
 
             LazyColumn(
@@ -205,50 +235,43 @@ fun RoomView(vm: RoomVM) {
                                         ),
                                     backgroundColor = if(message.from == vm.email) Purple500 else Color.DarkGray,
                                     contentColor = Color.White,
-                                    shape = RoundedCornerShape(5.dp),
+                                    shape = RoundedCornerShape(15.dp),
                                     elevation = animateDpAsState(
                                         if (dismissState.dismissDirection != null) 4.dp else 0.dp
                                     ).value
                                 ) {
-                                    ListItem (
-                                        text = {
-                                            Column {
-                                                if(message.attachment != null){
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .background(Color.White)
-                                                            .clickable {
-                                                                if(message.from != vm.email){
-                                                                    vm.downloadFile(message.attachment["first"].toString())
-                                                                }
-                                                                else{
-                                                                    vm.showSentImage(message.attachment["first"].toString())
-                                                                }
-                                                            },
-                                                        Arrangement.SpaceBetween
-                                                    ) {
-                                                        Text(
-                                                            text = message.attachment["first"].toString(),
-                                                            color = Color.DarkGray,
-                                                        )
-                                                        if(message.from != vm.email){
-                                                            Icon(
-                                                                painter = painterResource(id = R.drawable.ic_outline_download_24),
-                                                                contentDescription = null,
-                                                                tint = Color.Unspecified
-                                                            )
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        if(message.type.keys.contains("A")){
+                                            val innerMap = message.type["A"] as Map<String, Any>
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .background(Color.White)
+                                                    .clickable {
+                                                        if (message.from != vm.email) {
+                                                            vm.downloadFile(innerMap["first"].toString())
+                                                        } else {
+                                                            vm.showSentImage(innerMap["first"].toString())
                                                         }
-                                                    }
-                                                    Divider(thickness = 1.dp)
+                                                    },
+                                                Arrangement.SpaceBetween
+                                            ) {
+                                                Text(
+                                                    text = innerMap["first"].toString(),
+                                                    color = Color.DarkGray,
+                                                )
+                                                if(message.from != vm.email){
+                                                    Icon(
+                                                        painter = painterResource(id = R.drawable.ic_outline_download_24),
+                                                        contentDescription = null,
+                                                        tint = Color.Unspecified
+                                                    )
                                                 }
-                                                Text(text = message.body)
                                             }
-                                        },
-                                        secondaryText = {
-                                            Text(text = message.time.toDate().toString())
+                                            Divider(thickness = 1.dp)
                                         }
-                                    )
+                                        Text(text = message.body)
+                                    }
                                 }
 
                                 AnimatedVisibility(

@@ -2,14 +2,10 @@ package com.avasoft.androiddemo.Pages.LoginScreen
 
 import android.app.Application
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.avasoft.androiddemo.Helpers.AppConstants.GlobalConstants
 import com.avasoft.androiddemo.Helpers.Utilities.EmailValidator.EmailValidator
 import com.avasoft.androiddemo.Services.DemoDatabase
